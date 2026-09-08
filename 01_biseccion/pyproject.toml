@@ -1,0 +1,24 @@
+[project]
+name = "bisectrl"
+version = "0.1.0"
+description = "Un agente de RL aprende el método de bisección y a demostrar su convergencia, en vivo en la terminal."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["rich>=13"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+bisectrl = "bisectrl.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["bisectrl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

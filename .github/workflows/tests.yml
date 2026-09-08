@@ -1,0 +1,19 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [01_biseccion, 02_punto_fijo]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+      - run: python -m ${{ matrix.project == '01_biseccion' && 'bisectrl' || 'fixpointrl' }} --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs
