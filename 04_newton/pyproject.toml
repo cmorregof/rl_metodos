@@ -1,0 +1,24 @@
+[project]
+name = "newtonrl"
+version = "0.1.0"
+description = "Un agente de RL aprende Newton con salvaguardas y a demostrar su convergencia cuadrática, en vivo en la terminal."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["rich>=13"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+newtonrl = "newtonrl.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["newtonrl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

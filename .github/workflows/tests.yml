@@ -5,7 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: [01_biseccion, 02_punto_fijo]
+        include:
+          - { project: 01_biseccion,  package: bisectrl }
+          - { project: 02_punto_fijo, package: fixpointrl }
+          - { project: 03_taylor,     package: taylorrl }
+          - { project: 04_newton,     package: newtonrl }
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -16,4 +20,4 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - run: pytest -q
-      - run: python -m ${{ matrix.project == '01_biseccion' && 'bisectrl' || 'fixpointrl' }} --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs
+      - run: python -m ${{ matrix.package }} --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs

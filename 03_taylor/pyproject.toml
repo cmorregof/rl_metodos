@@ -1,0 +1,24 @@
+[project]
+name = "taylorrl"
+version = "0.1.0"
+description = "Un agente de RL aprende a sumar series de Taylor con criterio y a demostrar el teorema de Taylor, en vivo en la terminal."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["rich>=13"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+taylorrl = "taylorrl.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["taylorrl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
