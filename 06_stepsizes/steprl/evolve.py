@@ -230,6 +230,9 @@ def run_evolution(
             if verbose:
                 print(f"[gen {g}] proveedor falló: {e}")
             log.candidates.append({"generation": g, "error": f"proveedor: {e}"})
+            if out_dir:
+                out_dir.mkdir(parents=True, exist_ok=True)
+                log.save(out_dir / "evolucion.json")  # también los fallos del proveedor quedan en disco
             continue
         code = extract_code(text)
         c = evaluate(code, g, anytime_N=anytime_N)
