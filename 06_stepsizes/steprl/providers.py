@@ -54,7 +54,7 @@ def list_models(name: str) -> list[str]:
 @dataclass
 class OpenAIProvider:
     model: str
-    max_output_tokens: int = 16000
+    max_output_tokens: int = 64000  # en la API de OpenAI los tokens de razonamiento cuentan aquí: con effort alto, 16k se queda corto
     reasoning_effort: str | None = None  # p. ej. "high" en modelos con razonamiento
     calls: int = 0
 
@@ -78,9 +78,10 @@ class OpenAIProvider:
         )
         self.calls += 1
         choice = resp.choices[0]
-        if choice.finish_reason == "length":
-            raise ProviderError("la respuesta se cortó por longitud")
-        return choice.message.content or ""
+        text = choice.message.content or ""
+        if choice.finish_reason == "length" and text.count("```") < 2:
+            raise ProviderError("la respuesta se cortó por longitud (sube max_output_tokens o baja --effort)")
+        return text
 
 
 @dataclass
