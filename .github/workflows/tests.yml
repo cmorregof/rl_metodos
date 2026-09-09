@@ -6,11 +6,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - { project: 01_biseccion,  package: bisectrl }
-          - { project: 02_punto_fijo, package: fixpointrl }
-          - { project: 03_taylor,     package: taylorrl }
-          - { project: 04_newton,     package: newtonrl }
-          - { project: 05_secante,    package: secantrl }
+          - { project: 01_biseccion,  package: bisectrl,   smoke: "python -m bisectrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 02_punto_fijo, package: fixpointrl, smoke: "python -m fixpointrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 03_taylor,     package: taylorrl,   smoke: "python -m taylorrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 04_newton,     package: newtonrl,   smoke: "python -m newtonrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 05_secante,    package: secantrl,   smoke: "python -m secantrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 06_stepsizes,  package: steprl,     smoke: "python -m steprl verify && python -m steprl evolve --provider mock --generations 1 --anytime-n 7 --out /tmp/runs" }
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -21,4 +22,4 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - run: pytest -q
-      - run: python -m ${{ matrix.package }} --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs
+      - run: ${{ matrix.smoke }}

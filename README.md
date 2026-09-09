@@ -18,7 +18,9 @@ Cada carpeta es un proyecto autocontenido con el mismo formato, al estilo de los
 | [03](03_taylor/) | **Series de Taylor** | sumar la serie de f(x*) con criterio: cuántos términos, cuándo parar (criterio del último término) y cuándo la serie no converge (criterio del cociente) | teorema de Taylor con resto de Lagrange (vía Rolle iterado) y convergencia de la serie |
 | [04](04_newton/) | **Newton–Raphson** | cuándo dar el paso completo y cuándo amortiguar o retroceder con búsqueda lineal (Newton con salvaguardas); observa el orden ≈ 2 | convergencia cuadrática local, usando el resto de Lagrange de 03 |
 | [05](05_secante/) | **Secante** | cuándo fiarse del paso de la secante y cuándo refugiarse en el corchete (bisección o un paso de regula falsi): método de Dekker/Brent; observa el orden ≈ φ | convergencia local de orden φ = (1 + √5)/2 ≈ 1.618, vía diferencias divididas y la recurrencia de Fibonacci |
-| 06 | … | *(próximo)* | |
+| [06](06_stepsizes/) | **Pasos del descenso de gradiente** (frontera) | programas de pasos h₁…hₙ que minimizan el peor caso certificado; capa numérica (entropía cruzada) y capa simbólica (un LLM propone programas, el SDP los juzga) | el certificado es el dual del *performance estimation problem*: minimax a horizonte fijo (conjetura de Grimmer–Shu–Wang) y régimen anytime (abierto: 1.119 ≤ p ≤ 1.334) |
+
+A partir del 06 cambia el patrón: ya no hay un grafo de lemas escrito a mano que el agente ordena, sino un **verificador independiente** (un SDP) que certifica cada propuesta, y la búsqueda apunta a un problema abierto. La «demostración» es el certificado que devuelve el verificador.
 
 ## Ejecutar un proyecto
 
