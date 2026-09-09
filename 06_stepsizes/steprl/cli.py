@@ -3,6 +3,9 @@
   verify    comprueba el verificador contra PEPit, Drori–Teboulle y el silver schedule
   search    óptimos a horizonte fijo por entropía cruzada (capa numérica)
   evolve    bucle LLM → PEP (capa simbólica); --provider mock|openai|anthropic
+  models    lista los modelos que acepta la clave del proveedor (--provider openai|anthropic)
+
+Las claves se leen de OPENAI_API_KEY / ANTHROPIC_API_KEY o de un fichero .env en 06_stepsizes/.
 """
 
 from __future__ import annotations
@@ -76,6 +79,14 @@ def cmd_evolve(args) -> int:
     return 0
 
 
+def cmd_models(args) -> int:
+    from .providers import list_models
+
+    for m in list_models(args.provider):
+        print(m)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="steprl", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -95,5 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--pool", type=int, default=4)
     e.add_argument("--anytime-n", type=int, default=31)
     e.add_argument("--out", type=Path, default=Path("runs"))
+    m = sub.add_parser("models")
+    m.add_argument("--provider", choices=["openai", "anthropic"], default="openai")
     args = ap.parse_args(argv)
-    return {"verify": cmd_verify, "search": cmd_search, "evolve": cmd_evolve}[args.cmd](args)
+    return {"verify": cmd_verify, "search": cmd_search, "evolve": cmd_evolve, "models": cmd_models}[args.cmd](args)

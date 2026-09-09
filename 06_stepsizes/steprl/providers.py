@@ -11,10 +11,44 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 class ProviderError(RuntimeError):
     pass
+
+
+def load_dotenv(path: Path | None = None) -> list[str]:
+    """Carga KEY=valor de un .env (en la carpeta del proyecto) en os.environ sin pisar lo ya definido."""
+    path = path or Path(__file__).resolve().parent.parent / ".env"
+    loaded = []
+    if not path.exists():
+        return loaded
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        k, v = k.strip(), v.strip().strip("'").strip('"')
+        if k and k not in os.environ:
+            os.environ[k] = v
+            loaded.append(k)
+    return loaded
+
+
+def list_models(name: str) -> list[str]:
+    load_dotenv()
+    if name == "openai":
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise ProviderError("falta OPENAI_API_KEY (exporta la variable o escribe OPENAI_API_KEY=... en 06_stepsizes/.env)")
+        from openai import OpenAI
+
+        return sorted(m.id for m in OpenAI().models.list())
+    if name == "anthropic":
+        import anthropic
+
+        return sorted(m.id for m in anthropic.Anthropic().models.list())
+    raise ProviderError(f"proveedor desconocido: {name}")
 
 
 @dataclass
@@ -25,8 +59,9 @@ class OpenAIProvider:
     calls: int = 0
 
     def __post_init__(self) -> None:
+        load_dotenv()
         if not os.environ.get("OPENAI_API_KEY"):
-            raise ProviderError("falta OPENAI_API_KEY en el entorno")
+            raise ProviderError("falta OPENAI_API_KEY (exporta la variable o escribe OPENAI_API_KEY=... en 06_stepsizes/.env)")
         from openai import OpenAI
 
         self._client = OpenAI()
@@ -57,6 +92,7 @@ class AnthropicProvider:
     calls: int = 0
 
     def __post_init__(self) -> None:
+        load_dotenv()
         import anthropic
 
         self._anthropic = anthropic
