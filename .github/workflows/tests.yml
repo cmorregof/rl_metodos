@@ -10,6 +10,7 @@ jobs:
           - { project: 02_punto_fijo, package: fixpointrl }
           - { project: 03_taylor,     package: taylorrl }
           - { project: 04_newton,     package: newtonrl }
+          - { project: 05_secante,    package: secantrl }
     defaults:
       run:
         working-directory: ${{ matrix.project }}
