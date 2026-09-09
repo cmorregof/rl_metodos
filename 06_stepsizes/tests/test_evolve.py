@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from steprl.evolve import REFERENCE_FIXED, anytime_exponent, baselines, evaluate, extract_code, run_evolution
+from steprl.evolve import REFERENCE_FIXED, anytime_exponent, baselines, doubling_exponent, evaluate, extract_code, run_evolution
 from steprl.providers import MOCK_SCRIPTS, MockProvider
 from steprl.search import cross_entropy
 
@@ -29,6 +29,19 @@ def test_anytime_exponent_of_power_law():
     assert abs(p - 1.2) < 1e-9 and abs(slope - 1.2) < 1e-9
     taus[7] = 0.1  # un prefijo malo hunde la garantía anytime
     assert anytime_exponent(taus)[0] < 0.8
+
+
+def test_doubling_exponent_is_asymptotic_and_punishes_spikes():
+    for C in (0.5, 3.0):  # independiente de la constante
+        p, t = doubling_exponent([C / t**1.2 for t in range(1, 64)])
+        assert abs(p - 1.2) < 1e-9
+    const = [1 / (4 * t + 2) for t in range(1, 64)]
+    p, t = doubling_exponent(const)
+    assert 0.9 < p < 1.0 and t == 8  # paso constante: O(1/t), el mínimo lo da el t más pequeño
+    spiky = [0.5 / t**1.2 for t in range(1, 64)]
+    spiky[15] = spiky[7]  # τ_16 = τ_8: pico tipo silver
+    p, t = doubling_exponent(spiky)
+    assert abs(p) < 1e-9 and t == 16
 
 
 def test_mock_evolution_runs_and_logs(tmp_path: Path):

@@ -8,9 +8,12 @@ puntúa en dos regímenes:
 * horizonte fijo: τ(n) = peor caso certificado de f(xₙ) − f* para varios n,
   comparado con la mejor referencia conocida (silver / óptimos numéricos);
 * anytime: para el programa largo s = schedule(N), el peor caso de cada
-  prefijo τ₁…τ_N y el mayor p tal que τₜ ≤ ½·t⁻ᵖ para todo t ≤ N (½ es la
-  cota trivial f(x₀) − f* ≤ LR²/2). El mejor exponente anytime publicado es
-  1.119 (Zhang et al. 2024); la cota inferior, 1.334 (2026).
+  prefijo τ₁…τ_N y dos exponentes: el **de duplicación** (mín sobre t ≥ 8 de
+  log(τ_{t/2}/τ_t)/log 2, asintótico y robusto a picos: es la puntuación) y
+  la garantía finita τₜ ≤ ½·t⁻ᵖ para todo t ≤ N (½ es la cota trivial
+  f(x₀) − f* ≤ LR²/2; inflada para N pequeño, solo informativa). El mejor
+  exponente anytime publicado es 1.119 (Zhang et al. 2024); la cota inferior,
+  1.334 (2026); el paso constante tiende a 1.
 """
 
 from __future__ import annotations
@@ -71,14 +74,31 @@ ANYTIME_C = 0.5  # f(x₀) − f* ≤ L R²/2 siempre: anclamos la garantía any
 
 def anytime_exponent(taus: list[float], C: float = ANYTIME_C) -> tuple[float, float]:
     """Mayor p tal que τₜ ≤ C·t⁻ᵖ para TODO t = 2…N (garantía anytime certificada con constante C);
-    devuelve (p, pendiente LS en log-log). La pendiente LS es informativa pero esconde los picos
-    (el silver truncado tiene τ₄ = τ₈ = 0.0858), por eso la puntuación es p, no la pendiente."""
+    devuelve (p, pendiente LS en log-log). Es una garantía a N finito: con C = ½ está inflada para N
+    pequeño (el paso constante da 1.21 a N = 31 y tiende a 1), así que NO es comparable con los
+    exponentes asintóticos publicados; para eso está `doubling_exponent`."""
     ts = np.arange(1, len(taus) + 1)
     taus = np.asarray(taus, dtype=float)
     mask = ts >= 2
     p = float(np.min(np.log(C / taus[mask]) / np.log(ts[mask])))
     slope = fit_exponent(ts[mask], taus[mask]) if mask.sum() >= 2 else float("nan")
     return p, float(slope)
+
+
+def doubling_exponent(taus: list[float], t_min: int = 8) -> tuple[float, int]:
+    """Exponente asintótico robusto: mín sobre t ≥ t_min de log(τ_{⌊t/2⌋}/τ_t)/log 2, el orden observado
+    en la última duplicación del horizonte. Para τ_t ~ C·t⁻ᵖ tiende a p sea cual sea C; un pico
+    (τ_t ≈ τ_{t/2}, como el silver truncado) lo hunde a 0. Devuelve (p, t que manda)."""
+    taus = np.asarray(taus, dtype=float)
+    N = len(taus)
+    if N < t_min:
+        return float("nan"), 0
+    best_p, best_t = float("inf"), 0
+    for t in range(t_min, N + 1):
+        p = math.log(taus[t // 2 - 1] / taus[t - 1]) / math.log(2)
+        if p < best_p:
+            best_p, best_t = p, t
+    return float(best_p), best_t
 
 
 @dataclass
@@ -89,6 +109,8 @@ class Candidate:
     fixed_ratio: float = float("nan")  # media geométrica de τ(n)/referencia (1 = igual que lo conocido)
     anytime_p: float = float("nan")
     anytime_slope: float = float("nan")
+    doubling_p: float = float("nan")  # exponente asintótico por duplicación (comparable con 1.119 / 1.334)
+    doubling_t: int = 0
     anytime_taus: list[float] = field(default_factory=list)
     error: str = ""
     seconds: float = 0.0
@@ -101,8 +123,10 @@ class Candidate:
         if not self.ok:
             return f"ERROR: {self.error}"
         fx = ", ".join(f"n={n}: {v:.5f} ({v / REFERENCE_FIXED[n]:.3f}×ref)" for n, v in self.fixed.items() if n in REFERENCE_FIXED)
-        return (f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}; anytime: τ_t ≤ ½·t^(−{self.anytime_p:.3f}) para todo t ≤ {len(self.anytime_taus)}"
-                f" (pendiente LS {self.anytime_slope:.3f})")
+        return (f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}; anytime a N={len(self.anytime_taus)}: "
+                f"exponente por duplicación p={self.doubling_p:.3f} (manda t={self.doubling_t}), garantía finita τ_t ≤ ½·t^(−{self.anytime_p:.3f}), "
+                f"pendiente LS {self.anytime_slope:.3f}, τ_N={self.anytime_taus[-1]:.5f}" if self.anytime_taus else
+                f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}")
 
 
 def evaluate(code: str, generation: int, fixed_ns=(1, 2, 3, 4, 5, 6, 7, 8, 10), anytime_N: int = 31) -> Candidate:
@@ -122,6 +146,7 @@ def evaluate(code: str, generation: int, fixed_ns=(1, 2, 3, 4, 5, 6, 7, 8, 10), 
             h = _valid(fn(anytime_N), anytime_N)
             c.anytime_taus = prefix_worst_cases(h)
             c.anytime_p, c.anytime_slope = anytime_exponent(c.anytime_taus)
+            c.doubling_p, c.doubling_t = doubling_exponent(c.anytime_taus)
     except Exception as e:  # el candidato falló: se conserva el motivo para el LLM
         c.error = f"{type(e).__name__}: {e}"[:400]
     c.seconds = time.perf_counter() - t0
@@ -141,7 +166,7 @@ def baselines(anytime_N: int = 31) -> dict[str, Candidate]:
 
 def build_prompt(pool: list[Candidate], objective: str, anytime_N: int) -> str:
     lines = [
-        f"Objetivo actual: {'ANYTIME (maximizar p tal que τ_t ≤ ½·t^(−p) para todo prefijo t; el mejor exponente anytime publicado es 1.119 y la cota inferior 1.334; ojo: un solo prefijo malo hunde p)' if objective == 'anytime' else 'HORIZONTE FIJO (minimizar τ(n)/referencia; referencia = mejores óptimos numéricos conocidos)'}.",
+        f"Objetivo actual: {'ANYTIME (maximizar el exponente por duplicación p = mín_t log(τ_(t/2)/τ_t)/log 2 sobre los prefijos t ≥ 8: es el orden asintótico observado y castiga los picos). Contexto: el mejor exponente anytime publicado es 1.119 y la cota inferior asintótica 1.334; el paso constante da p → 1. Un programa con pasos acotados solo puede mejorar la constante, no el exponente: para acelerar hacen falta pasos que crezcan con t SIN que ningún prefijo se dispare' if objective == 'anytime' else 'HORIZONTE FIJO (minimizar τ(n)/referencia; referencia = mejores óptimos numéricos conocidos)'}.",
         f"Referencias a horizonte fijo τ_ref(n): {json.dumps({k: round(v, 6) for k, v in REFERENCE_FIXED.items()})}",
         f"En el régimen anytime evaluamos schedule({anytime_N}) y el peor caso de cada prefijo t = 1…{anytime_N}.",
         "",
@@ -162,7 +187,7 @@ def score_key(c: Candidate, objective: str) -> float:
     if not c.ok:
         return float("inf")
     if objective == "anytime":
-        return -c.anytime_p if c.anytime_p == c.anytime_p else float("inf")
+        return -c.doubling_p if c.doubling_p == c.doubling_p else float("inf")
     return c.fixed_ratio if c.fixed_ratio == c.fixed_ratio else float("inf")
 
 
