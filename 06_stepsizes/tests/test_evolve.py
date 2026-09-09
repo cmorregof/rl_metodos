@@ -44,8 +44,14 @@ def test_doubling_exponent_is_asymptotic_and_punishes_spikes():
     assert abs(p) < 1e-9 and t == 16
 
 
+def test_overfitting_the_horizon_is_punished():
+    code = "def schedule(n):\n    return [1.5] * min(n, 8) + [0.01] * max(0, n - 8)  # solo funciona hasta n=8"
+    c = evaluate(code, 1, fixed_ns=(1,), anytime_N=(8, 16))
+    assert c.ok and c.per_horizon[8]["p"] > 0.8 and c.doubling_p < 0.3  # el peor horizonte manda
+
+
 def test_mock_evolution_runs_and_logs(tmp_path: Path):
-    pool = run_evolution(MockProvider(list(MOCK_SCRIPTS)), generations=2, objective="fixed", anytime_N=7, out_dir=tmp_path, verbose=False)
+    pool = run_evolution(MockProvider(list(MOCK_SCRIPTS)), generations=2, objective="fixed", anytime_N=(7,), out_dir=tmp_path, verbose=False)
     assert (tmp_path / "evolucion.json").exists() and (tmp_path / "mejor.py").exists()
     assert pool[0].ok and pool[0].fixed_ratio < 2.0
 

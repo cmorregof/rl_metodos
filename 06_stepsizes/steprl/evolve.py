@@ -109,9 +109,10 @@ class Candidate:
     fixed_ratio: float = float("nan")  # media geométrica de τ(n)/referencia (1 = igual que lo conocido)
     anytime_p: float = float("nan")
     anytime_slope: float = float("nan")
-    doubling_p: float = float("nan")  # exponente asintótico por duplicación (comparable con 1.119 / 1.334)
+    doubling_p: float = float("nan")  # mínimo sobre horizontes del exponente por duplicación (comparable con 1.119 / 1.334)
     doubling_t: int = 0
-    anytime_taus: list[float] = field(default_factory=list)
+    anytime_taus: list[float] = field(default_factory=list)  # prefijos del horizonte mayor
+    per_horizon: dict[int, dict] = field(default_factory=dict)  # N → {p, t, anchored, slope, tau_N}
     error: str = ""
     seconds: float = 0.0
 
@@ -123,13 +124,19 @@ class Candidate:
         if not self.ok:
             return f"ERROR: {self.error}"
         fx = ", ".join(f"n={n}: {v:.5f} ({v / REFERENCE_FIXED[n]:.3f}×ref)" for n, v in self.fixed.items() if n in REFERENCE_FIXED)
-        return (f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}; anytime a N={len(self.anytime_taus)}: "
-                f"exponente por duplicación p={self.doubling_p:.3f} (manda t={self.doubling_t}), garantía finita τ_t ≤ ½·t^(−{self.anytime_p:.3f}), "
-                f"pendiente LS {self.anytime_slope:.3f}, τ_N={self.anytime_taus[-1]:.5f}" if self.anytime_taus else
-                f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}")
+        if not self.per_horizon:
+            return f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}"
+        hz = "; ".join(
+            f"N={N}: dup p={r['p']:.3f} (t={r['t']}), ½-garantía {r['anchored']:.3f}, LS {r['slope']:.3f}, τ_N={r['tau_N']:.5f}"
+            for N, r in sorted(self.per_horizon.items())
+        )
+        return f"horizonte fijo [{fx}] ratio medio {self.fixed_ratio:.4f}; anytime (puntuación = mínimo sobre horizontes) p={self.doubling_p:.3f} [{hz}]"
 
 
-def evaluate(code: str, generation: int, fixed_ns=(1, 2, 3, 4, 5, 6, 7, 8, 10), anytime_N: int = 31) -> Candidate:
+def evaluate(code: str, generation: int, fixed_ns=(1, 2, 3, 4, 5, 6, 7, 8, 10), anytime_N=(31, 63)) -> Candidate:
+    """`anytime_N`: horizonte o tupla de horizontes; la puntuación anytime es el peor exponente por
+    duplicación entre ellos (un programa que sobreajusta a un horizonte, p. ej. con `_HORIZON = 31`
+    escrito a mano, se hunde en el otro)."""
     c = Candidate(code=code, generation=generation)
     t0 = time.perf_counter()
     try:
@@ -142,18 +149,23 @@ def evaluate(code: str, generation: int, fixed_ns=(1, 2, 3, 4, 5, 6, 7, 8, 10), 
             if n in REFERENCE_FIXED:
                 ratios.append(tau / REFERENCE_FIXED[n])
         c.fixed_ratio = float(np.exp(np.mean(np.log(ratios)))) if ratios else float("nan")
-        if anytime_N:
-            h = _valid(fn(anytime_N), anytime_N)
-            c.anytime_taus = prefix_worst_cases(h)
-            c.anytime_p, c.anytime_slope = anytime_exponent(c.anytime_taus)
-            c.doubling_p, c.doubling_t = doubling_exponent(c.anytime_taus)
+        horizons = [N for N in (anytime_N if isinstance(anytime_N, (tuple, list)) else (anytime_N,)) if N]
+        for N in sorted(horizons):
+            h = _valid(fn(N), N)
+            taus = prefix_worst_cases(h)
+            pa, sl = anytime_exponent(taus)
+            pd, td = doubling_exponent(taus)
+            c.per_horizon[N] = {"p": pd, "t": td, "anchored": pa, "slope": sl, "tau_N": taus[-1]}
+            c.anytime_taus, c.anytime_p, c.anytime_slope = taus, pa, sl
+            if not (c.doubling_p == c.doubling_p) or pd < c.doubling_p:
+                c.doubling_p, c.doubling_t = pd, td
     except Exception as e:  # el candidato falló: se conserva el motivo para el LLM
         c.error = f"{type(e).__name__}: {e}"[:400]
     c.seconds = time.perf_counter() - t0
     return c
 
 
-def baselines(anytime_N: int = 31) -> dict[str, Candidate]:
+def baselines(anytime_N=(31, 63)) -> dict[str, Candidate]:
     """Referencias: silver (longitud 2ᵏ − 1 truncada / extendida por la fórmula 2-ádica) y paso constante 1."""
     silver_code = (
         "import math\nRHO = 1 + math.sqrt(2)\n"
@@ -164,11 +176,14 @@ def baselines(anytime_N: int = 31) -> dict[str, Candidate]:
     return {"silver": evaluate(silver_code, 0, anytime_N=anytime_N), "constante": evaluate(const_code, 0, anytime_N=anytime_N)}
 
 
-def build_prompt(pool: list[Candidate], objective: str, anytime_N: int) -> str:
+def build_prompt(pool: list[Candidate], objective: str, anytime_N) -> str:
+    horizons = list(anytime_N) if isinstance(anytime_N, (tuple, list)) else [anytime_N]
     lines = [
         f"Objetivo actual: {'ANYTIME (maximizar el exponente por duplicación p = mín_t log(τ_(t/2)/τ_t)/log 2 sobre los prefijos t ≥ 8: es el orden asintótico observado y castiga los picos). Contexto: el mejor exponente anytime publicado es 1.119 y la cota inferior asintótica 1.334; el paso constante da p → 1. Un programa con pasos acotados solo puede mejorar la constante, no el exponente: para acelerar hacen falta pasos que crezcan con t SIN que ningún prefijo se dispare' if objective == 'anytime' else 'HORIZONTE FIJO (minimizar τ(n)/referencia; referencia = mejores óptimos numéricos conocidos)'}.",
         f"Referencias a horizonte fijo τ_ref(n): {json.dumps({k: round(v, 6) for k, v in REFERENCE_FIXED.items()})}",
-        f"En el régimen anytime evaluamos schedule({anytime_N}) y el peor caso de cada prefijo t = 1…{anytime_N}.",
+        f"En el régimen anytime evaluamos schedule(N) para varios N ({', '.join(map(str, horizons))} en esta ronda, pero el horizonte puede cambiar) "
+        f"y el peor caso de cada prefijo t = 1…N; la puntuación es el PEOR exponente entre horizontes. No escribas el horizonte a mano: "
+        f"un programa que solo funciona hasta N=31 se hunde en N=63.",
         "",
         "Programas evaluados hasta ahora (de peor a mejor), con su puntuación certificada:",
     ]
@@ -176,7 +191,7 @@ def build_prompt(pool: list[Candidate], objective: str, anytime_N: int) -> str:
         lines.append("```python\n" + c.code + "\n```")
         lines.append("→ " + c.summary())
         if c.ok and c.anytime_taus:
-            lines.append("   τ_t anytime: " + ", ".join(f"{v:.4f}" for v in c.anytime_taus))
+            lines.append(f"   τ_t anytime (N={len(c.anytime_taus)}): " + ", ".join(f"{v:.4f}" for v in c.anytime_taus))
         lines.append("")
     lines.append("Propón un programa nuevo, distinto de los anteriores, que mejore la puntuación del objetivo actual. "
                  "Explica en un comentario de una línea qué idea estructural pruebas.")
@@ -207,7 +222,7 @@ def run_evolution(
     generations: int = 10,
     objective: str = "anytime",
     pool_size: int = 4,
-    anytime_N: int = 31,
+    anytime_N=(31, 63),
     out_dir: Path | None = None,
     verbose: bool = True,
     provider_name: str = "",

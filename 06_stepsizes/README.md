@@ -48,16 +48,20 @@ El valor de n = 6 está un 0.25 % por debajo del tabulado y lo confirman tres so
 Un candidato es código Python que define `schedule(n) -> list[float]`. Se puntúa con el PEP en dos regímenes:
 
 * **fijo**: `τ(n)/referencia` para n = 1…8 y 10 (media geométrica);
-* **anytime**: para `schedule(N)` se certifica el peor caso de cada prefijo `τ₁…τ_N` y se reporta el mayor `p` tal que `τₜ ≤ ½·t^(−p)` para todo `t ≤ N` (½ es la cota trivial `f(x₀) − f* ≤ LR²/2`). Un solo prefijo malo hunde `p`: el silver truncado a n = 4 u 8 termina en un pico y da `τ₄ = τ₈ = 0.0858`. La métrica solo es comparable a **igual N**, y las afirmaciones asintóticas exigen N grande (63 o más).
+* **anytime**: para `schedule(N)` se certifica el peor caso de cada prefijo `τ₁…τ_N` y la puntuación es el **exponente por duplicación** `p = mín_{t ≥ 8} log(τ_{⌊t/2⌋}/τ_t)/log 2`: el orden observado en la última duplicación del horizonte, independiente de la constante y que un pico hunde a cero (el silver truncado a n = 8 o 16 da `τ₁₆ = τ₈ = 0.0858`). Se evalúa en varios horizontes (31 y 63 por defecto) y manda el peor, para que no se pueda sobreajustar al horizonte. También se reporta la garantía finita `τₜ ≤ ½·t^(−p)` para todo `t ≤ N`, pero solo como información: con ½ está inflada a N pequeño (el paso constante da 1.21 a N = 31 y tiende a 1) y no es comparable con los exponentes publicados.
 
 El prompt lleva las referencias (silver y paso constante a ese mismo N) y los mejores programas con sus puntuaciones; el LLM devuelve un programa nuevo; todo queda en `runs/<fecha>/evolucion.json` y `mejor.py`. El proveedor es intercambiable:
 
 ```bash
 export OPENAI_API_KEY=…      # o ANTHROPIC_API_KEY
-python -m steprl evolve --provider openai    --model <id del modelo GPT> --effort high --generations 20 --anytime-n 31
-python -m steprl evolve --provider anthropic --model claude-fable-5-1     --effort high --generations 20 --anytime-n 31
+python -m steprl evolve --provider openai    --model <id del modelo GPT> --effort high --generations 20 --anytime-n 31,63
+python -m steprl evolve --provider anthropic --model claude-fable-5-1     --effort high --generations 20 --anytime-n 31,63
 python -m steprl evolve --provider mock      # ensayo en seco sin claves
 ```
+
+## Ejecuciones
+
+* [01 · gpt-6-astra, 2026-09-09](docs/ejecucion-01-gpt-6-astra.md): 6 programas válidos de 20; todos con pasos acotados (orden 1, constante 2–2.5× mejor que el paso constante); el modelo converge a las composiciones de Grimmer–Shu–Wang; una generación sobreajustó el horizonte. Motivó la métrica por duplicación, los dos horizontes y el límite de 64k.
 
 ## Qué sería publicable
 
