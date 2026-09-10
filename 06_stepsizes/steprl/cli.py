@@ -71,6 +71,7 @@ def cmd_evolve(args) -> int:
         objective=args.objective,
         pool_size=args.pool,
         anytime_N=tuple(int(x) for x in str(args.anytime_n).split(",") if x.strip()),
+        target_p=args.target_p,
         out_dir=out,
         provider_name=args.provider,
         model_name=args.model or "",
@@ -105,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--generations", type=int, default=10)
     e.add_argument("--pool", type=int, default=4)
     e.add_argument("--anytime-n", default="31,63", help="horizontes anytime separados por comas; la puntuación es el peor")
+    e.add_argument("--target-p", type=float, default=1.12, help="exponente objetivo de la garantía anytime: se minimiza C(p*) = máx_t τ_t·t^p*")
     e.add_argument("--out", type=Path, default=Path("runs"))
     m = sub.add_parser("models")
     m.add_argument("--provider", choices=["openai", "anthropic"], default="openai")

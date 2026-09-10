@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from steprl.evolve import REFERENCE_FIXED, anytime_exponent, baselines, doubling_exponent, evaluate, extract_code, run_evolution
+from steprl.evolve import REFERENCE_FIXED, anytime_exponent, baselines, doubling_exponent, evaluate, extract_code, guarantee_constant, run_evolution
 from steprl.providers import MOCK_SCRIPTS, MockProvider
 from steprl.search import cross_entropy
 
@@ -44,10 +44,23 @@ def test_doubling_exponent_is_asymptotic_and_punishes_spikes():
     assert abs(p) < 1e-9 and t == 16
 
 
+def test_guarantee_constant_punishes_spikes_and_slow_starts():
+    clean = [0.2 / t**1.12 for t in range(1, 64)]
+    C, t = guarantee_constant(clean, 1.12)
+    assert abs(C - 0.2) < 1e-9
+    spiky = list(clean); spiky[15] = spiky[7]
+    assert guarantee_constant(spiky, 1.12)[0] > 0.3 and guarantee_constant(spiky, 1.12)[1] == 16
+    slow = [0.4] + clean[1:]  # arranque lento: τ₁ grande manda
+    assert guarantee_constant(slow, 1.12) == (0.4, 1)
+    const = [1 / (4 * t + 2) for t in range(1, 64)]
+    assert guarantee_constant(const, 1.12)[1] == 63  # orden 1: la constante crece con N y manda el último t
+
+
 def test_overfitting_the_horizon_is_punished():
     code = "def schedule(n):\n    return [1.5] * min(n, 8) + [0.01] * max(0, n - 8)  # solo funciona hasta n=8"
     c = evaluate(code, 1, fixed_ns=(1,), anytime_N=(8, 16))
     assert c.ok and c.per_horizon[8]["p"] > 0.8 and c.doubling_p < 0.3  # el peor horizonte manda
+    assert c.C_target == max(r["C"] for r in c.per_horizon.values())
 
 
 def test_mock_evolution_runs_and_logs(tmp_path: Path):
