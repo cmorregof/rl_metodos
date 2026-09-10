@@ -253,6 +253,7 @@ def run_evolution(
     anytime_N=(31, 63),
     target_p: float = TARGET_P_DEFAULT,
     out_dir: Path | None = None,
+    provider_retries: int = 8,  # reintentos con espera creciente ante errores transitorios (red, tasa)
     verbose: bool = True,
     provider_name: str = "",
     model_name: str = "",
@@ -268,15 +269,28 @@ def run_evolution(
     for g in range(1, generations + 1):
         pool.sort(key=lambda c: score_key(c, objective), reverse=True)  # de peor a mejor para el prompt
         prompt = build_prompt(pool[-pool_size:], objective, anytime_N, target_p)
-        try:
-            text = provider.complete(SYSTEM_PROMPT, prompt)
-        except Exception as e:
-            if verbose:
-                print(f"[gen {g}] proveedor falló: {e}")
-            log.candidates.append({"generation": g, "error": f"proveedor: {e}"})
-            if out_dir:
-                out_dir.mkdir(parents=True, exist_ok=True)
-                log.save(out_dir / "evolucion.json")  # también los fallos del proveedor quedan en disco
+        text = None
+        for attempt in range(provider_retries + 1):
+            try:
+                text = provider.complete(SYSTEM_PROMPT, prompt)
+                break
+            except Exception as e:
+                msg = str(e)
+                transient = any(k in msg.lower() for k in ("connection", "timeout", "timed out", "límite de tasa", "rate", "overloaded", "502", "503", "529"))
+                if transient and attempt < provider_retries:
+                    wait = min(600, 30 * 2**attempt)  # 30 s, 60, 120, … hasta 10 min: sin red (tapa cerrada) no se queman generaciones
+                    if verbose:
+                        print(f"[gen {g}] proveedor: {msg[:80]} → reintento {attempt + 1}/{provider_retries} en {wait} s")
+                    time.sleep(wait)
+                    continue
+                if verbose:
+                    print(f"[gen {g}] proveedor falló: {e}")
+                log.candidates.append({"generation": g, "error": f"proveedor: {e}"})
+                if out_dir:
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    log.save(out_dir / "evolucion.json")  # también los fallos del proveedor quedan en disco
+                break
+        if text is None:
             continue
         code = extract_code(text)
         c = evaluate(code, g, anytime_N=anytime_N, target_p=target_p)
