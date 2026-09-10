@@ -150,6 +150,45 @@ def silver_bound(k: int) -> float:
     return 1.0 / (1 + np.sqrt(4 * SILVER_RATIO ** (2 * k) - 3))
 
 
+def _phi(x: float, y: float) -> float:
+    """Paso de unión de Zhang et al. (2024): φ(x, y) = [−(x+y) + √((x+y+2)² + 4(x+1)(y+1))]/2."""
+    return (-(x + y) + np.sqrt((x + y + 2) ** 2 + 4 * (x + 1) * (y + 1))) / 2
+
+
+def _concat(s: list[float], r: list[float]) -> list[float]:
+    """concat(s, r) = [s, φ(1ᵀs, 1ᵀr), r] (Zhang et al. 2024, ec. de concatenación)."""
+    return s + [float(_phi(sum(s), sum(r)))] + r
+
+
+def zhang_silver_block(i: int) -> list[float]:
+    """s̄₀ = [], s̄ᵢ = concat(s̄ᵢ₋₁, s̄ᵢ₋₁): coincide con el silver de longitud 2ⁱ − 1 y suma ρⁱ − 1."""
+    s: list[float] = []
+    for _ in range(i):
+        s = _concat(s, s)
+    return s
+
+
+def zhang_schedule(n: int, c: float | None = None) -> list[float]:
+    """Schedule anytime de Zhang et al., «Anytime acceleration of gradient descent» (arXiv:2411.17668):
+    el bloque s̄ⱼ se repite kⱼ = ⌊2·2^{c j}⌋ veces (c = log₂ρ en el teorema, es decir kⱼ = ⌊2ρʲ⌋) y los
+    bloques se encadenan en orden con ŝᵢ = concat(ŝᵢ₋₁, sᵢ). Garantía demostrada: O(T^{−ϑ}) para todo T,
+    ϑ = 2 log₂ρ / (1 + log₂ρ) ≈ 1.119."""
+    c = float(np.log2(SILVER_RATIO)) if c is None else c
+    s: list[float] = []
+    j = 1
+    while len(s) < n:
+        block = zhang_silver_block(j)
+        for _ in range(int(np.floor(2 * 2 ** (c * j)))):
+            s = _concat(s, block)
+            if len(s) >= n:
+                break
+        j += 1
+    return s[:n]
+
+
+ZHANG_EXPONENT = 2 * np.log2(SILVER_RATIO) / (1 + np.log2(SILVER_RATIO))
+
+
 def fit_exponent(ns, values) -> float:
     """Exponente p tal que valor ≈ C·n⁻ᵖ (ajuste lineal en log-log)."""
     x = np.log(np.asarray(ns, dtype=float))

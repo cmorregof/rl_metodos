@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from steprl.pep import constant_bound, fit_exponent, gd_worst_case, prefix_worst_cases, silver_bound, silver_schedule
+from steprl.pep import (SILVER_RATIO, ZHANG_EXPONENT, constant_bound, fit_exponent, gd_worst_case, prefix_worst_cases,
+                        silver_bound, silver_schedule, zhang_schedule, zhang_silver_block)
 
 
 def test_constant_step_matches_drori_teboulle():
@@ -57,3 +58,14 @@ def test_prefix_and_exponent():
     assert len(taus) == 7 and taus[-1] == pytest.approx(gd_worst_case(silver_schedule(3)).value, abs=1e-6)
     p = fit_exponent([3, 7, 15], [gd_worst_case(silver_schedule(k)).value for k in (2, 3, 4)])
     assert 1.0 < p < 1.4
+
+
+def test_zhang_schedule_construction():
+    """Zhang et al. (arXiv:2411.17668): s̄ᵢ = concat(s̄ᵢ₋₁, s̄ᵢ₋₁) es el silver; kⱼ = ⌊2ρʲ⌋ = 4, 11, 28, …"""
+    for i in (1, 2, 3):
+        b = zhang_silver_block(i)
+        assert np.allclose(b, silver_schedule(i)) and abs(sum(b) - (SILVER_RATIO**i - 1)) < 1e-9
+    s = zhang_schedule(60)
+    assert len(s) == 60 and np.allclose(zhang_schedule(20), s[:20])  # no depende del horizonte
+    assert s[1] == pytest.approx(np.sqrt(2)) and s[7] == pytest.approx(np.sqrt(2))  # 4 bloques s̄₁ con sus uniones: 8 pasos
+    assert abs(ZHANG_EXPONENT - 1.119) < 1e-3
