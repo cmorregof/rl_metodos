@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import numpy as np
+
 from steprl.evolve import REFERENCE_FIXED, anytime_exponent, baselines, doubling_exponent, evaluate, extract_code, guarantee_constant, run_evolution
 from steprl.providers import MOCK_SCRIPTS, MockProvider
 from steprl.search import cross_entropy
@@ -72,3 +74,10 @@ def test_mock_evolution_runs_and_logs(tmp_path: Path):
 def test_cross_entropy_recovers_n2_optimum():
     r = cross_entropy(2, generations=20, population=30, seed=0)
     assert abs(r.value - REFERENCE_FIXED[2]) < 2e-5
+
+
+def test_cross_entropy_with_mu_and_negative_bounds():
+    r = cross_entropy(2, generations=10, population=20, seed=0, mu=0.1)
+    assert r.value < 0.09  # mejor que el paso constante 1 (≈ 0.106 para n = 1; para n = 2 aún menos)
+    r = cross_entropy(2, generations=5, population=10, seed=0, bounds=(-5.0, 20.0), refine=False)
+    assert np.all(r.h >= -5.0)

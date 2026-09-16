@@ -13,8 +13,8 @@ puntúa en dos regímenes:
   mejor; máximo sobre horizontes). Es la puntuación: ni los picos ni los
   arranques lentos la mejoran. Se acompaña del exponente por duplicación y
   del de la última duplicación, solo informativos. El mejor exponente anytime
-  publicado es 1.119 (Zhang et al. 2024); la cota inferior, 1.334 (2026); el
-  paso constante tiene orden 1, así que su C crece con N.
+  publicado es 1.119 (Zhang et al. 2024) y es óptimo para pasos no negativos
+  (Ye–Liu 2026); el paso constante tiene orden 1, así que su C crece con N.
 """
 
 from __future__ import annotations
@@ -31,15 +31,13 @@ import numpy as np
 
 from .pep import fit_exponent, gd_worst_case, prefix_worst_cases, silver_schedule
 
-# Óptimos numéricos a horizonte fijo (Das Gupta et al.; tabla de Grimmer–Shu–Wang, /2 por convención) y
-# los que reproduce nuestra búsqueda por entropía cruzada (n = 6 sale ligeramente mejor: por contrastar).
-REFERENCE_FIXED: dict[int, float] = {
-    1: 0.125000, 2: 0.065945, 3: 0.042895, 4: 0.031170, 5: 0.024070,
-    6: 0.020049, 7: 0.016330, 8: 0.014055, 9: 0.012280, 10: 0.010620,
-}
-ANYTIME_BEST_KNOWN = 1.119
-ANYTIME_LOWER_BOUND = 1.334
-TARGET_P_DEFAULT = 1.12  # exponente objetivo de la garantía anytime: justo por encima del mejor publicado
+from .refs import REFERENCE_FIXED  # noqa: F401  (las referencias viven ahora en refs.py)
+
+ANYTIME_BEST_KNOWN = 1.119  # Zhang, Lee, Du y Chen (COLT 2025): 2·log₂ρ/(1 + log₂ρ) ≈ 1.1195
+# Ye y Liu (arXiv:2609.09152, sep 2026): ninguna sucesión de pasos NO NEGATIVOS supera ese exponente
+# (salvo n^{o(1)}); el exponente anytime está cerrado y lo que queda son constantes y pasos negativos.
+ANYTIME_LOWER_BOUND = 1.1195
+TARGET_P_DEFAULT = 1.12  # exponente objetivo de la garantía anytime (ya solo tiene sentido con pasos negativos)
 
 
 def guarantee_constant(taus, p: float) -> tuple[float, int]:
@@ -206,7 +204,7 @@ def baselines(anytime_N=(31, 63), target_p: float = TARGET_P_DEFAULT) -> dict[st
 def build_prompt(pool: list[Candidate], objective: str, anytime_N, target_p: float = TARGET_P_DEFAULT) -> str:
     horizons = list(anytime_N) if isinstance(anytime_N, (tuple, list)) else [anytime_N]
     lines = [
-        f"Objetivo actual: {f'ANYTIME: minimizar C({target_p:g}) = máx_t τ_t·t^{target_p:g}, la menor constante con la que la garantía f(x_t) − f* ≤ C·L·R²·t^(−{target_p:g}) queda certificada para TODO prefijo t en todos los horizontes. Menor es mejor. Un pico sube C; un arranque con pasos pequeños (τ_1 grande) también sube C: no hay atajos. Contexto: el mejor exponente anytime publicado es 1.119, la cota inferior asintótica 1.334 y el paso constante tiene orden 1 (su C crece con N). Un programa con pasos acotados solo mejora la constante, no el orden: para que C se mantenga acotada al crecer N hacen falta pasos que crezcan con t sin que ningún prefijo se dispare. Cuando la población se estabilice subiremos el exponente objetivo.' if objective == 'anytime' else 'HORIZONTE FIJO (minimizar τ(n)/referencia; referencia = mejores óptimos numéricos conocidos)'}.",
+        f"Objetivo actual: {f'ANYTIME: minimizar C({target_p:g}) = máx_t τ_t·t^{target_p:g}, la menor constante con la que la garantía f(x_t) − f* ≤ C·L·R²·t^(−{target_p:g}) queda certificada para TODO prefijo t en todos los horizontes. Menor es mejor. Un pico sube C; un arranque con pasos pequeños (τ_1 grande) también sube C: no hay atajos. Contexto: el mejor exponente anytime publicado es 1.119 y desde septiembre de 2026 se sabe que es óptimo para pasos no negativos (Ye–Liu); el paso constante tiene orden 1 (su C crece con N). Un programa con pasos acotados solo mejora la constante, no el orden: para que C se mantenga acotada al crecer N hacen falta pasos que crezcan con t sin que ningún prefijo se dispare. Cuando la población se estabilice subiremos el exponente objetivo.' if objective == 'anytime' else 'HORIZONTE FIJO (minimizar τ(n)/referencia; referencia = mejores óptimos numéricos conocidos)'}.",
         f"Referencias a horizonte fijo τ_ref(n): {json.dumps({k: round(v, 6) for k, v in REFERENCE_FIXED.items()})}",
         f"En el régimen anytime evaluamos schedule(N) para varios N ({', '.join(map(str, horizons))} en esta ronda, pero el horizonte puede cambiar) "
         f"y el peor caso de cada prefijo t = 1…N; la puntuación es el PEOR exponente entre horizontes. No escribas el horizonte a mano: "

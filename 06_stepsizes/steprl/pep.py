@@ -10,7 +10,14 @@ por las desigualdades de interpolación
     fᵢ ≥ fⱼ + ⟨gⱼ, xᵢ − xⱼ⟩ + (1/2L)·‖gᵢ − gⱼ‖²   para todo par i ≠ j,
 
 y basta trabajar con la matriz de Gram de (x₀, g₀, …, gₙ) y el vector de
-valores (f₀, …, fₙ) con x* = 0, g* = 0, f* = 0.
+valores (f₀, …, fₙ) con x* = 0, g* = 0, f* = 0. Para f μ-fuertemente convexa
+y L-suave (μ > 0) la desigualdad de interpolación es la de Taylor–Hendrickx–
+Glineur (2017, teorema 4):
+
+    fᵢ ≥ fⱼ + ⟨gⱼ, xᵢ − xⱼ⟩ + 1/(2(1−μ/L))·[ (1/L)‖gᵢ − gⱼ‖² + μ‖xᵢ − xⱼ‖² − 2(μ/L)⟨gᵢ − gⱼ, xᵢ − xⱼ⟩ ],
+
+que con μ = 0 se reduce a la anterior. El SDP no exige hₖ > 0: los pasos
+negativos se permiten aquí y se filtran (o no) en la capa de validación.
 
 El valor del SDP es un **certificado**: el dual (multiplicadores λᵢⱼ ≥ 0 y
 τ ≥ 0) da una demostración de que f(xₙ) − f* ≤ τ·L·R² combinando las
@@ -38,6 +45,7 @@ class PEPResult:
     gram: np.ndarray | None = None  # matriz de Gram del peor caso (primal)
     fvals: np.ndarray | None = None  # valores f₀…fₙ del peor caso
     status: str = ""
+    mu: float = 0.0
 
 
 def _vectors(h: np.ndarray, L: float) -> tuple[list[np.ndarray], list[np.ndarray]]:
@@ -60,6 +68,33 @@ def _vectors(h: np.ndarray, L: float) -> tuple[list[np.ndarray], list[np.ndarray
     return xs, gs
 
 
+def _sym(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Matriz simétrica A tal que ⟨u, v⟩_G = ⟨A, G⟩ = tr(A G)."""
+    return (np.outer(u, v) + np.outer(v, u)) / 2
+
+
+def interpolation_matrices(h, L: float = 1.0, mu: float = 0.0) -> tuple[list[tuple[int, int]], list[np.ndarray]]:
+    """Para cada par (i, j), i ≠ j, la matriz Aᵢⱼ tal que la desigualdad de interpolación
+    de F_{μ,L} se escribe  fᵢ − fⱼ − ⟨Aᵢⱼ, G⟩ ≥ 0  (con G la matriz de Gram).
+    Es la misma construcción que usa `certify.py` en aritmética exacta."""
+    h = np.asarray(h, dtype=float)
+    if not 0 <= mu < L:
+        raise ValueError(f"se requiere 0 ≤ μ < L (μ = {mu}, L = {L})")
+    xs, gs = _vectors(h, L)
+    dim = len(h) + 2
+    c = 1.0 / (2 * (1 - mu / L))
+    pairs, mats = [], []
+    for i in range(dim):
+        for j in range(dim):
+            if i == j:
+                continue
+            dx, dg = xs[i] - xs[j], gs[i] - gs[j]
+            A = _sym(gs[j], dx) + c * ((1 / L) * np.outer(dg, dg) + mu * np.outer(dx, dx) - 2 * (mu / L) * _sym(dg, dx))
+            pairs.append((i, j))
+            mats.append(A)
+    return pairs, mats
+
+
 def gd_worst_case(
     h,
     L: float = 1.0,
@@ -67,9 +102,12 @@ def gd_worst_case(
     objective: str = "fval",
     solver: str = "CLARABEL",
     want_certificate: bool = False,
+    mu: float = 0.0,
+    solver_opts: dict | None = None,
 ) -> PEPResult:
     """Peor caso de f(xₙ) − f* (objective="fval") o ‖∇f(xₙ)‖² ("gradnorm")
-    del descenso de gradiente con pasos h sobre F₀,L con ‖x₀ − x*‖ ≤ R."""
+    del descenso de gradiente con pasos h sobre F_{μ,L} con ‖x₀ − x*‖ ≤ R.
+    `solver_opts` se pasa al solver (p. ej. tolerancias más finas de Clarabel)."""
     h = np.asarray(h, dtype=float)
     n = len(h)
     dim = n + 2
@@ -84,15 +122,8 @@ def gd_worst_case(
     def inner(u, v):
         return cp.sum(cp.multiply(np.outer(u, v), G))
 
-    constraints = []
-    pairs = []
-    for i in range(dim):
-        for j in range(dim):
-            if i == j:
-                continue
-            d = gs[i] - gs[j]
-            constraints.append(fv(i) >= fv(j) + inner(gs[j], xs[i] - xs[j]) + inner(d, d) / (2 * L))
-            pairs.append((i, j))
+    pairs, mats = interpolation_matrices(h, L, mu)
+    constraints = [fv(i) - fv(j) - cp.sum(cp.multiply(A, G)) >= 0 for (i, j), A in zip(pairs, mats)]
     init = inner(xs[0], xs[0]) <= R * R
     constraints.append(init)
     if objective == "fval":
@@ -102,8 +133,8 @@ def gd_worst_case(
     else:
         raise ValueError(objective)
     prob = cp.Problem(cp.Maximize(obj), constraints)
-    prob.solve(solver=solver)
-    res = PEPResult(value=float(prob.value), h=tuple(h.tolist()), objective=objective, status=prob.status)
+    prob.solve(solver=solver, **(solver_opts or {}))
+    res = PEPResult(value=float(prob.value), h=tuple(h.tolist()), objective=objective, status=prob.status, mu=mu)
     if want_certificate:
         lam = np.zeros((dim, dim))
         for (i, j), c in zip(pairs, constraints[:-1]):
@@ -119,6 +150,9 @@ def prefix_worst_cases(h, objective: str = "fval", **kw) -> list[float]:
     """Peor caso de cada prefijo (h₁…hₜ), t = 1…n: lo que hace falta para el régimen *anytime*."""
     h = list(h)
     return [gd_worst_case(h[:t], objective=objective, **kw).value for t in range(1, len(h) + 1)]
+
+
+TIGHT_CLARABEL = {"tol_gap_abs": 1e-10, "tol_gap_rel": 1e-10, "tol_feas": 1e-10, "max_iter": 500}
 
 
 # ---------------------------------------------------------------------------

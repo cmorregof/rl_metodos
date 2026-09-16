@@ -7,3 +7,4 @@ runs/
 dist/
 build/
 .DS_Store
+.Rhistory

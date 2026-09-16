@@ -30,11 +30,11 @@ class SearchResult:
     evaluations: int = 0
 
 
-def _tau(h, objective="fval") -> float:
-    if np.any(h <= 0) or np.any(h > 20):
+def _tau(h, objective="fval", mu: float = 0.0, bounds=(0.05, 20.0)) -> float:
+    if np.any(h < bounds[0]) or np.any(h > bounds[1]):
         return 1.0
     try:
-        return gd_worst_case(h, objective=objective).value
+        return gd_worst_case(h, objective=objective, mu=mu).value
     except Exception:
         return 1.0
 
@@ -50,18 +50,20 @@ def cross_entropy(
     objective: str = "fval",
     refine: bool = True,
     verbose: bool = False,
+    mu: float = 0.0,
+    bounds: tuple[float, float] = (0.05, 20.0),  # (−5, 20) para explorar pasos negativos
 ) -> SearchResult:
     rng = np.random.default_rng(seed)
     mean = np.full(n, init_mean, dtype=float) if np.isscalar(init_mean) else np.asarray(init_mean, dtype=float).copy()
     std = np.full(n, init_std, dtype=float)
     n_elite = max(2, int(elite_frac * population))
-    best_h, best_v = mean.copy(), _tau(mean, objective)
+    best_h, best_v = mean.copy(), _tau(mean, objective, mu, bounds)
     history = []
     evals = 1
     for g in range(generations):
         pop = rng.normal(mean, std, size=(population, n))
-        pop = np.clip(pop, 0.05, 20.0)
-        vals = np.array([_tau(h, objective) for h in pop])
+        pop = np.clip(pop, bounds[0], bounds[1])
+        vals = np.array([_tau(h, objective, mu, bounds) for h in pop])
         evals += population
         order = np.argsort(vals)
         elite = pop[order[:n_elite]]
@@ -75,7 +77,7 @@ def cross_entropy(
         if std.max() < 1e-4:
             break
     if refine:
-        r = minimize(lambda h: _tau(h, objective), best_h, method="Nelder-Mead", options={"xatol": 1e-6, "fatol": 1e-9, "maxiter": 400 * n})
+        r = minimize(lambda h: _tau(h, objective, mu, bounds), best_h, method="Nelder-Mead", options={"xatol": 1e-6, "fatol": 1e-9, "maxiter": 400 * n})
         evals += r.nfev
         if r.fun < best_v:
             best_v, best_h = float(r.fun), np.asarray(r.x)

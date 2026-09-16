@@ -9,7 +9,7 @@ Sexto proyecto de [rl_metodos](../README.md). Es el [proyecto 02](../02_punto_fi
 Descenso de gradiente sin momento, `xₖ₊₁ = xₖ − (hₖ/L)·∇f(xₖ)`, sobre funciones convexas L-suaves con `‖x₀ − x*‖ ≤ R`. ¿Qué sucesión de pasos `h₁…hₙ` minimiza el peor caso de `f(xₙ) − f*`?
 
 * **Horizonte fijo.** El *silver stepsize schedule* (Altschuler y Parrilo, 2023) da `O(n^−1.2716)` con un patrón fractal 2-ádico; Grimmer, Shu y Wang (2024) componen schedules que igualan o baten a los óptimos numéricos y conjeturan que son minimax-óptimos. Nadie lo ha probado.
-* **Anytime** (sin conocer n de antemano; problema abierto planteado en COLT 2024 por Kornowski y Shamir). Mejor exponente conocido: 1.119 (Zhang et al., 2024). Cota inferior para cualquier schedule: 1.334 (2026). Nesterov con momento: 2.
+* **Anytime** (sin conocer n de antemano; problema abierto planteado en COLT 2024 por Kornowski y Shamir). Mejor exponente conocido: 1.119 (Zhang et al., COLT 2025). **Cerrado en septiembre de 2026**: Ye y Liu ([arXiv:2609.09152](https://arxiv.org/abs/2609.09152)) prueban que ningún schedule de pasos *no negativos* supera 2p/(1+p) ≈ 1.1195 (p = log₂(1+√2)) salvo n^{o(1)}, y que el silver es óptimo en exponente a horizonte fijo. Las cotas que admiten pasos negativos son más débiles (1.2408 anytime, 1.6342 fijo; [arXiv:2609.02855](https://arxiv.org/abs/2609.02855)). Nesterov con momento: 2.
 
 ## El verificador
 
@@ -63,11 +63,31 @@ python -m steprl evolve --provider mock      # ensayo en seco sin claves
 
 * [01 · gpt-6-astra, 2026-09-09](docs/ejecucion-01-gpt-6-astra.md): 6 programas válidos de 20; todos con pasos acotados (orden 1, constante 2–2.5× mejor que el paso constante); el modelo converge a las composiciones de Grimmer–Shu–Wang; una generación sobreajustó el horizonte. Motivó la métrica por duplicación, los dos horizontes y el límite de 64k.
 
-## Qué sería publicable
+## Qué sería publicable (revisado el 16 de septiembre de 2026)
 
-1. Un schedule con `p` anytime certificado por encima de 1.119 para N grande (aunque sea numérico: la cota inferior de 2026 salió como nota corta).
-2. Una **gramática de composición** descubierta por el LLM que generalice a todo n y bata a los óptimos numéricos: el ángulo que nadie ha tomado (la comunidad usa branch-and-bound y análisis a mano).
-3. Extensiones donde no hay óptimos conocidos: proximal, proyectado, estocástico.
+~~1. Un schedule con `p` anytime certificado por encima de 1.119.~~ Cerrado para pasos no negativos (Ye–Liu, 8 de septiembre de 2026).
+
+1. **El PEP como entorno de RL** (`steprl/env.py`): instancias (n, μ, criterio, ¿pasos negativos?), recompensa `log(τ_ref/τ)` referida a lo mejor conocido, sandbox, caché, y puerta de certificación exacta para cualquier mejora. Sobre él: entrenar un modelo abierto (expert iteration primero; GRPO si el Air aguanta) y compararlo con el bucle de LLM congelado a igual cómputo. El análogo más cercano es AutoOPT (Kim, Ryu y Das Gupta, [arXiv:2608.07407](https://arxiv.org/abs/2608.07407), agosto de 2026: BnB-PEP → LLM → Lean 4), que no entrena nada ni tiene entorno.
+2. **Teoremas certificados** en variantes abiertas, como salida del entorno: pasos negativos (¿baten al silver?), fuertemente convexo (n, κ) sin cotas inferiores conocidas, norma del gradiente a horizonte fijo, proximal. Cada mejora sale con un certificado racional exacto (`steprl/certify.py`), no con un número del solver.
+3. Una **gramática de composición** que generalice a todo n, si el agente la encuentra: hoy la referencia analítica son las sucesiones OBS-F/OBS-G de Grimmer–Shu–Wang (pendientes de implementar como `τ_ref`).
+
+## Entorno, certificados y referencias
+
+| módulo | qué hace |
+|---|---|
+| `pep.py` | ahora acepta `mu` (F_{μ,L}, interpolación de Taylor–Hendrickx–Glineur), `solver_opts` y pasos negativos; validado contra PEPit (`pytest`) |
+| `certify.py` | dual del PEP con margen δ → redondeo a racionales → reparación exacta del flujo → LDLᵀ exacta con `fractions`. `verify()` recomprueba solo con los racionales. Exceso típico sobre el valor del SDP: 1e-7 |
+| `refs.py` | instancias, familias de entrenamiento (n ≤ 12; μ ∈ {0, 0.01, 0.1}; f(xₙ)−f* y ‖∇f(xₙ)‖²) y de prueba (n ∈ {16, 24}); `τ_ref` = min(tabla, entropía cruzada), con la fuente anotada |
+| `env.py` | `score(programa, instancia)` y `score_batch` en paralelo con caché; recompensa `max(−2, log(τ_ref/τ))`, −3 si inválido; toda mejora afirmada se recalcula con tolerancias finas y se certifica, y sin certificado no cuenta |
+
+```bash
+python -m steprl bench                              # ms por SDP y segundos por certificado según n
+python -m steprl refs --workers 8                   # construye refs.json (una vez; horas en el Air, incremental)
+python -m steprl score --program mejor.py --n 8 --mu 0.1 [--negative]
+python -m steprl certify --h 1.4142,1.8768 --out cert.json && python -m steprl check cert.json
+```
+
+Tiempos medidos (un núcleo, Clarabel): SDP n = 8 ≈ 80 ms, n = 12 ≈ 200 ms, n = 24 ≈ 1 s; certificado exacto n = 12 ≈ 1 s, n = 16 ≈ 2 s.
 
 ## Uso
 
@@ -91,4 +111,7 @@ pytest -q
 * Grimmer, Shu y Wang (2024). *Composing optimized stepsize schedules for gradient descent.* [arXiv:2410.16249](https://arxiv.org/abs/2410.16249)
 * Kornowski y Shamir (2024). *Open problem: anytime convergence rate of gradient descent.* COLT. [arXiv:2406.13888](https://arxiv.org/abs/2406.13888)
 * Zhang et al. (2024). *Anytime acceleration of gradient descent.* [arXiv:2411.17668](https://arxiv.org/abs/2411.17668)
-* *Lower bounds for anytime acceleration of gradient descent* (2026). [arXiv:2607.02053](https://arxiv.org/abs/2607.02053)
+* Tsai, Fatkhullin, Zhang y He (2026). *Lower bounds for anytime acceleration of gradient descent.* [arXiv:2607.02053](https://arxiv.org/abs/2607.02053)
+* Jung, Cho y Yun (2026). *Stronger lower bounds for (non-)anytime acceleration of gradient descent.* [arXiv:2609.04032](https://arxiv.org/abs/2609.04032)
+* Ye y Liu (2026). *Improved gradient descent lower bounds beyond Nesterov.* [arXiv:2609.02855](https://arxiv.org/abs/2609.02855) · *Silver rate is (almost) optimal for gradient descent acceleration.* [arXiv:2609.09152](https://arxiv.org/abs/2609.09152)
+* Kim, Ryu y Das Gupta (2026). *A domain-specific harness for end-to-end automation of optimization research* (AutoOPT). [arXiv:2608.07407](https://arxiv.org/abs/2608.07407)

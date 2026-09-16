@@ -69,3 +69,27 @@ def test_zhang_schedule_construction():
     assert len(s) == 60 and np.allclose(zhang_schedule(20), s[:20])  # no depende del horizonte
     assert s[1] == pytest.approx(np.sqrt(2)) and s[7] == pytest.approx(np.sqrt(2))  # 4 bloques s̄₁ con sus uniones: 8 pasos
     assert abs(ZHANG_EXPONENT - 1.119) < 1e-3
+
+
+def test_strongly_convex_and_gradnorm_match_pepit():
+    from PEPit import PEP
+    from PEPit.functions import SmoothStronglyConvexFunction
+
+    rng = np.random.default_rng(3)
+    for n, mu, obj in ((2, 0.05, "fval"), (4, 0.3, "fval"), (3, 0.1, "gradnorm")):
+        h = rng.uniform(0.3, 3.0, n)
+        p = PEP()
+        f = p.declare_function(SmoothStronglyConvexFunction, L=1.0, mu=mu)
+        xs = f.stationary_point()
+        x0 = p.set_initial_point()
+        p.set_initial_condition((x0 - xs) ** 2 <= 1)
+        x = x0
+        for hi in h:
+            x = x - hi * f.gradient(x)
+        p.set_performance_metric(f(x) - f(xs) if obj == "fval" else f.gradient(x) ** 2)
+        assert abs(gd_worst_case(h, mu=mu, objective=obj).value - p.solve(verbose=0)) < 1e-4
+
+
+def test_negative_steps_are_accepted_by_the_sdp():
+    r = gd_worst_case([1.5, -0.3, 1.5])
+    assert r.status == "optimal" and 0 < r.value < 0.5
