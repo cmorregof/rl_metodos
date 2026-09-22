@@ -22,35 +22,40 @@ aplique a un problema difícil**.
 
 ### Cómo se traduce eso en términos honestos
 
+Aclaración del docente (22 sep 2026): "demostrar su propio teorema" significa **algo nuevo en
+métodos numéricos**, no un teorema del libro reescrito como grafo. Eso fija el patrón del
+final del curso: el del proyecto 06, no el de la fase 2 de 01–05.
+
 En los proyectos 01–05 el agente hace dos cosas distintas:
 
 1. **Fase 1 · redescubrir el método.** Sin conocer el algoritmo, a base de recompensas,
    una tabla Q converge al método del libro (λ = 1/2, la ley de control de Banach, Armijo,
-   Dekker…). Aquí sí hay descubrimiento genuino, y sirve para enseñar *por qué* el método
-   es como es (el punto medio es el corte minimax; el paso de Newton es el punto fijo óptimo).
+   Dekker…). Sirve para enseñar *por qué* el método es como es.
 2. **Fase 2 · ordenar una demostración.** El teorema está escrito a mano como grafo de
-   lemas con dependencias y distractores. El agente aprende un orden topológico válido y a
-   rechazar los distractores. **No demuestra nada nuevo.** Lo que tiene valor formativo es
-   que el estudiante escriba el grafo: eso le obliga a explicitar qué depende de qué, y a
-   inventar distractores que son sus propios errores.
+   lemas con dependencias y distractores. El agente aprende un orden válido y a rechazar
+   distractores. **No demuestra nada nuevo.** Su valor formativo es que el estudiante escriba
+   el grafo: explicitar qué depende de qué e inventar distractores que son sus propios errores.
 
-Por tanto, "demostrar su propio teorema vía RL" significa, para un estudiante de 2.º–4.º
-semestre:
+Para que al final haya **algo nuevo**, hace falta el tercer ingrediente, el del 06: un
+**verificador independiente** que certifica cada propuesta, y una búsqueda (RL, entropía
+cruzada, o un LLM) que propone. Un "teorema nuevo" a este nivel es una afirmación concreta y
+certificada del tipo "estos 9 nodos tienen constante de Lebesgue 2.31, menor que la de
+Chebyshev (2.45)", o "estos pesos de cuadratura integran exactamente hasta grado 7 con esta
+función peso", con certificado exacto (racionales, o cota de error verificable). Pequeño, pero
+nuevo y verificable. Eso es alcanzable en un semestre si desde el lab 5 cada proyecto trae su
+**fase 3: verificador + búsqueda**.
 
-* elegir un teorema del curso (o una variante) que **no esté** en el repo;
-* escribir su `proof_kb.py`: ≥ 10 pasos con dependencias correctas, ≥ 5 distractores
-  que sean errores plausibles, y comprobar que el cierre transitivo desde ∎ es la
-  demostración mínima;
-* diseñar un entorno de fase 1 donde el agente redescubra un parámetro o una decisión del
-  método asociado (opcional pero deseable);
-* entrenar, leer el informe, y **defender** por qué el grafo es una demostración.
+Por tanto, a partir del proyecto 07 cada proyecto tiene tres fases:
 
-El "problema difícil" al final es el paso al patrón del 06: un **verificador independiente**
-(no un grafo escrito a mano) que puntúa propuestas. Versiones accesibles para este nivel:
-pesos de una cuadratura verificados exactamente con `fractions`, el ω óptimo de SOR
-para una matriz dada verificado con el radio espectral, el paso constante óptimo del
-descenso de gradiente para funciones cuadráticas (donde el peor caso es calculable a mano).
-El 06 completo (SDP, PEP, LLM) queda como demostración del docente, no como tarea.
+| fase | qué hay | quién demuestra |
+|---|---|---|
+| 1 · método | entorno de RL, el agente redescubre el método del libro | nadie: es descubrimiento del método |
+| 2 · demostración | grafo de lemas del teorema clásico + distractores | el autor del grafo |
+| 3 · frontera | `verify.py`: certifica una propuesta; `search`: busca propuestas mejores que la referencia | el verificador; el resultado es nuevo si supera lo tabulado |
+
+El proyecto final del estudiante: elegir un problema con verificador accesible, correr la
+búsqueda, y presentar el mejor resultado certificado con su certificado. El 06 completo
+(SDP, PEP, LLM) queda como demostración del docente.
 
 ## Arco del curso: 10 laboratorios de 90 minutos
 
@@ -64,7 +69,7 @@ necesitan **proyectos nuevos en el repo** (07–10) con la misma anatomía que 0
 | 2 | punto fijo | 02 | ley de control de α (Banach) | punto fijo de Banach | código listo, guía pendiente |
 | 3 | Taylor | 03 | cuántos términos, cuándo parar, cuándo rendirse | Taylor con resto de Lagrange | código listo, guía pendiente |
 | 4 | Newton y secante | 04 + 05 | salvaguardas (Armijo, Dekker); órdenes 2 y φ | convergencia cuadrática / orden φ | código listo, guía pendiente (una sesión con los dos) |
-| 5 | interpolación | 07 (nuevo) | dónde poner los nodos: Chebyshev emerge frente a equiespaciados (Runge) | error de interpolación de Lagrange | por construir |
+| 5 | interpolación | 07 (nuevo) | dónde poner los nodos (Chebyshev emerge frente a equiespaciados, Runge) y cuántos | error de interpolación de Lagrange; fase 3: constante de Lebesgue como verificador, búsqueda de nodos mejores que Chebyshev | en construcción (22 sep 2026) |
 | 6 | integración | 08 (nuevo) | cuándo subdividir: Simpson adaptativo emerge | error del trapecio / Simpson | por construir |
 | 7 | sistemas lineales | 09 (nuevo) | ajustar ω en SOR / elegir Jacobi vs Gauss–Seidel | convergencia con diagonal dominante | por construir |
 | 8 | ecuaciones diferenciales | 10 (nuevo) | control del paso h: RK adaptativo emerge | convergencia de Euler (Lipschitz, error global O(h)) | por construir |

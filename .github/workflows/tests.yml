@@ -11,6 +11,7 @@ jobs:
           - { project: 03_taylor,     package: taylorrl,   smoke: "python -m taylorrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
           - { project: 04_newton,     package: newtonrl,   smoke: "python -m newtonrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
           - { project: 05_secante,    package: secantrl,   smoke: "python -m secantrl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs" }
+          - { project: 07_interpolacion, package: interprl, smoke: "python -m interprl --no-tui --episodes1 800 --episodes2 800 --out /tmp/runs && python -m interprl search --n 4 --iters 5 --out /tmp/runs" }
           - { project: 06_stepsizes,  package: steprl,     smoke: "python -m steprl verify && python -m steprl evolve --provider mock --generations 1 --anytime-n 7,9 --out /tmp/runs" }
     defaults:
       run:

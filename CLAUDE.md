@@ -19,10 +19,12 @@ El repo tiene dos usos que conviven:
 04_newton/      newtonrl    aprende cuándo amortiguar el paso (Armijo emerge); convergencia cuadrática
 05_secante/     secantrl    aprende Dekker (secante / regula falsi / bisección); orden φ
 06_stepsizes/   steprl      FRONTERA: pasos del descenso de gradiente, verificador PEP (SDP), LLM propone
+07_interpolacion/ interprl  CURSO, 3 fases: nodos (Chebyshev emerge) y cuántos; teorema del error; fase 3 Lebesgue + búsqueda
 docs/curso/     material docente (contexto, laboratorios, notas del docente)
 ```
 
-Cada proyecto 01–05 es un paquete independiente con la misma anatomía:
+Cada proyecto 01–05 y 07 es un paquete independiente con la misma anatomía (07 añade `interp.py`, el
+verificador numérico, y `search.py`, la fase 3):
 
 | módulo | qué es |
 |---|---|
@@ -52,7 +54,7 @@ pytest -q
 ```
 
 Tiempos medidos (22 sep 2026, MacBook): `--no-tui` con 3000+3000 generaciones tarda
-0.35 s en 01–05. El 06 `verify` tarda ~3 s. La animación es lo que consume tiempo.
+0.35 s en 01–05 y ~15 s en 07 (interpola en una malla). El 06 `verify` tarda ~3 s. La animación es lo que consume tiempo.
 
 Calibración de 01 con semilla 1: λ = 1/2 estable en la gen ~345, invariante de Bolzano
 en la ~358, primera demostración completa en la ~256 de fase 2, primera mínima en la ~459.

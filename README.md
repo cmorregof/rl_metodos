@@ -20,15 +20,17 @@ Cada carpeta es un proyecto autocontenido con el mismo formato, al estilo de los
 | [05](05_secante/) | **Secante** | cuándo fiarse del paso de la secante y cuándo refugiarse en el corchete (bisección o un paso de regula falsi): método de Dekker/Brent; observa el orden ≈ φ | convergencia local de orden φ = (1 + √5)/2 ≈ 1.618, vía diferencias divididas y la recurrencia de Fibonacci |
 | [06](06_stepsizes/) | **Pasos del descenso de gradiente** (frontera) | programas de pasos h₁…hₙ que minimizan el peor caso certificado; capa numérica (entropía cruzada) y capa simbólica (un LLM propone programas, el SDP los juzga) | el certificado es el dual del *performance estimation problem*: minimax a horizonte fijo (conjetura de Grimmer–Shu–Wang) y régimen anytime (abierto: 1.119 ≤ p ≤ 1.334) |
 
+| [07](07_interpolacion/) | **Interpolación** (curso) | dónde poner los nodos (Chebyshev emerge frente a equiespaciados: Runge) y cuántos (estimador \|pₙ − pₙ₋₁\|); fase 3: nodos con constante de Lebesgue menor que Chebyshev, con verificador | error de interpolación con resto de Lagrange (Rolle iterado) y minimalidad de Chebyshev |
+
 A partir del 06 cambia el patrón: ya no hay un grafo de lemas escrito a mano que el agente ordena, sino un **verificador independiente** (un SDP) que certifica cada propuesta, y la búsqueda apunta a un problema abierto. La «demostración» es el certificado que devuelve el verificador.
 
 ## Ejecutar un proyecto
 
 ```bash
-cd 01_biseccion            # o 02_punto_fijo, 03_taylor, 04_newton, 05_secante
+cd 01_biseccion            # o 02_punto_fijo, 03_taylor, 04_newton, 05_secante, 07_interpolacion
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m bisectrl         # o fixpointrl, taylorrl, newtonrl, secantrl
+python -m bisectrl         # o fixpointrl, taylorrl, newtonrl, secantrl, interprl
 pytest -q
 ```
 
