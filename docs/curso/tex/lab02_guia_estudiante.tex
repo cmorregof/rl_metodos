@@ -1,0 +1,161 @@
+\input{preambulo}
+\newcommand{\docpie}{Laboratorio 2 · guía del estudiante}
+\begin{document}
+\cabecera{Laboratorio 2 · Controlar una iteración}{Un agente que ajusta el paso mirando solo dos números, y el teorema de Banach}{Métodos numéricos · Matemáticas · 90 minutos · en parejas}
+
+En el laboratorio 1 el agente aprendió \emph{dónde cortar}. Hoy aprende algo más difícil: \textbf{ajustar un parámetro sobre la marcha} mirando solo lo que la iteración le deja ver. Y el teorema es el de Banach, el que está detrás de casi todos los métodos iterativos del curso.
+
+Todas las órdenes se escriben dentro de \codigo{02\_punto\_fijo} y están escritas para Windows.
+\begin{nota}[Si usas Mac o Linux]
+\begin{center}
+\begin{tabular}{ll}
+\textbf{Windows} & \textbf{Mac / Linux} \\
+\codigo{.venv\textbackslash Scripts\textbackslash python} & \codigo{.venv/bin/python} \\
+\codigo{..\textbackslash docs\textbackslash curso\textbackslash lab02\textbackslash experimentos.py} & \codigo{../docs/curso/lab02/experimentos.py} \\
+\end{tabular}
+\end{center}
+\end{nota}
+
+\subsection*{Qué vas a hacer}
+\begin{enumerate}
+\item Ver que un parámetro fijo no sirve, y que un agente que solo mira dos números lo ajusta bien.
+\item Quitarle al agente información y ver qué deja de poder aprender (\textbf{el estado importa}).
+\item Darle una recompensa de progreso que él mismo puede manipular (\textbf{el potencial importa}).
+\item Dibujar el grafo del teorema de Banach y encontrar el hueco cuando falta la contracción.
+\end{enumerate}
+
+\section{Instalación \hfill\small\normalfont 0–10 min}
+\begin{orden}
+cd 02_punto_fijo
+python -m venv .venv
+.venv\Scripts\python -m pip install -e ".[dev]"
+.venv\Scripts\python -m fixpointrl --no-tui --seed 1
+\end{orden}
+Cada proyecto tiene su propio \codigo{.venv}: el de \codigo{01\_biseccion} no sirve aquí.
+
+\section{El problema \hfill\small\normalfont 10–20 min, en papel}
+
+Para resolver $f(x)=0$ iteramos $x \leftarrow g(x)$ con $g(x) = x - \alpha f(x)$. La raíz $r$ es punto fijo de $g$ \textbf{para cualquier $\alpha$}. Pero la iteración solo converge si $g$ es contracción cerca de $r$:
+\[
+|g'(r)| = |1 - \alpha f'(r)| < 1 .
+\]
+El agente \textbf{no conoce $f'$ ni $r$}. Tras cada iteración solo ve dos cosas medibles:
+\begin{itemize}
+\item $\rho = |f(x_{n+1})| / |f(x_n)|$, la razón de residuos consecutivos (en 6 cubos);
+\item si el residuo \textbf{cambió de signo} (oscila) o no (monótona).
+\end{itemize}
+Y puede: mantener $\alpha$, doblarlo, reducirlo a la mitad o invertir su signo.
+
+\begin{nota}[Responde antes de correr nada]
+\begin{preguntas}
+\pregunta{a}{Para $f(x) = 2(x-1)$, ¿para qué valores de $\alpha$ converge la iteración desde cualquier $x_0$? ¿Y qué $\alpha$ la hace converger en un solo paso?}
+\pregunta{b}{Cerca de la raíz, $\rho \approx |1-\alpha f'(r)|$. Di qué harías tú: si $\rho>1$ y la iteración es monótona, ¿qué está mal? ¿Y si $\rho>1$ y oscila? ¿Y si $\rho<1$ pero oscila?}
+\pregunta{c}{Predice: ¿en cuál de los 12 estados (6 cubos de $\rho$ $\times$ monótona/oscila) es más difícil decidir?}
+\end{preguntas}
+\end{nota}
+
+\section[Sin agente: alfa fijo]{Sin agente: $\alpha$ fijo \hfill\small\normalfont 20–30 min}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab02\experimentos.py alfa_fijo
+\end{orden}
+\begin{preguntas}
+\pregunta{d}{¿Cuál es el mejor $\alpha$ fijo y en qué porcentaje de problemas converge? ¿Por qué ningún $\alpha$ fijo puede funcionar siempre? (Pista: el signo de $f'(r)$ cambia de un problema a otro.)}
+\end{preguntas}
+
+\section{Mira cómo aprende \hfill\small\normalfont 30–45 min}
+\begin{orden}
+.venv\Scripts\python -m fixpointrl --seed 1
+\end{orden}
+Anota la generación de cada hito. Luego corre con \codigo{--seed 2} y completa la segunda columna.
+
+\renewcommand{\arraystretch}{2.1}
+\begin{tabularx}{\linewidth}{|X|c|c|}
+\hline
+\textbf{hito} & \textbf{gen. (seed 1)} & \textbf{gen. (seed 2)} \\
+\hline
+«si diverge monótonamente, el signo de $\alpha$ está mal» & \hspace{2.6cm} & \hspace{2.6cm} \\
+\hline
+primera convergencia & & \\
+\hline
+«si oscila, $\alpha$ es demasiado grande» & & \\
+\hline
+ley coincide con Banach en los 12 estados & & \\
+\hline
+primera demostración mínima & & \\
+\hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.25}
+
+Abre \codigo{runs\textbackslash <fecha>\textbackslash informe.md} y mira la tabla \textbf{«ley de control aprendida»}.
+\begin{preguntas}
+\pregunta{e}{Compárala con tu tabla de (b). ¿En qué estados coincide con lo que tú habrías hecho?}
+\pregunta{f}{En el estado «$\rho \ge 1{,}5$, monótona» la teoría admite dos acciones (invertir o reducir). ¿Por qué las dos son razonables ahí?}
+\end{preguntas}
+
+\section{El estado importa \hfill\small\normalfont 45–60 min}
+Le quitamos al agente el bit de oscilación: ahora solo ve $\rho$.
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab02\experimentos.py ciego
+\end{orden}
+\begin{preguntas}
+\pregunta{g}{¿Cuánto cae el éxito? En los estados con $\rho>1$, ¿qué acción aprende y por qué es la mejor que puede tomar \textbf{sin saber} si oscila?}
+\pregunta{h}{Propón otro observable (algo que se pueda medir sin conocer $f'$ ni $r$) que le ayudaría más que el bit de oscilación, o argumenta que no hace falta.}
+\end{preguntas}
+
+\section{El potencial importa \hfill\small\normalfont 60–72 min}
+La recompensa de progreso es $\log_{10}\bigl(|f(x_n)|/|f(x_{n+1})|\bigr)$: premia reducir el residuo, que el agente no controla directamente. Vamos a cambiarla por $\log_{10}\bigl(|\text{paso anterior}|/|\text{paso nuevo}|\bigr)$: premia \textbf{moverse cada vez menos}.
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab02\experimentos.py potencial
+\end{orden}
+\begin{preguntas}
+\pregunta{i}{¿Cuánto cae el éxito? Mira los estados marcados \nok: ¿qué hace ahora el agente cuando oscila cerca de la raíz ($\rho<0{,}25$)? ¿Por qué «moverse menos» le da puntos aunque no le acerque a la raíz? ¿Con qué acción se consigue moverse menos sin resolver nada?}
+\end{preguntas}
+
+\section{El teorema de Banach como grafo \hfill\small\normalfont 72–85 min}
+Abre \codigo{fixpointrl\textbackslash proof\_kb.py}: 13 pasos con dependencias y 7 distractores.
+\begin{preguntas}
+\pregunta{j}{Dibuja el grafo en papel (nodos, flechas, hipótesis, \qed). Luego compáralo con el del programa:}
+\end{preguntas}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab02\experimentos.py dibujar
+\end{orden}
+\begin{preguntas}
+\pregunta{k}{El distractor \codigo{D\_LOCAL} dice «$|g'(p)|<1$, luego converge desde cualquier $x_0$». ¿Qué diferencia hay entre lo que dice el teorema y lo que dice el distractor? (Pista: local frente a global; ¿qué hipótesis garantiza que la iteración no se sale de $[a,b]$?)}
+\end{preguntas}
+Ahora el hueco:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab02\experimentos.py grafo
+\end{orden}
+Quitamos H2 (la contracción) de las dependencias de \codigo{ERR}. El verificador acepta una demostración donde la contracción \textbf{se declara después de haberla usado}.
+\begin{preguntas}
+\pregunta{l}{\codigo{ERR} dice $|x_{n+1}-p| \le k\,|x_n-p|$. ¿De dónde sale esa $k$? ¿Qué le pasa a la convergencia (\codigo{LIM}) si solo sabemos $k\le 1$? Relaciónalo con el distractor \codigo{D\_K1}.}
+\pregunta{m}{¿Quién es responsable de que la demostración sea correcta: el agente, el verificador o quien escribió las \codigo{deps}?}
+\end{preguntas}
+
+\section{Cierre \hfill\small\normalfont 85–90 min}
+Entrega (una por pareja): la tabla de hitos, las respuestas (a)–(m) en la hoja de entrega, y el párrafo final: \emph{¿qué observable elegirías para controlar el paso de Newton (laboratorio 4) sin conocer $f''$?}
+
+\begin{nota}[Tarea opcional]
+El estado tiene 12 combinaciones. Cambia \codigo{RATIO\_EDGES} en \codigo{env\_fixpoint.py} a solo dos cortes, \codigo{(0.5, 1.0)}, corre \codigo{--no-tui} y compara el éxito. ¿Cuánta resolución en $\rho$ hace falta? Revierte el cambio después.
+\end{nota}
+
+\clearpage
+\cabecera{Hoja de entrega · Laboratorio 2}{Nombres: \rule{7cm}{0.4pt}}{Fecha: \rule{3cm}{0.4pt} \quad Semillas usadas: \rule{2cm}{0.4pt}}
+
+\begin{respuesta}[1.9cm]{(a) $\alpha$ que convergen para $f(x)=2(x-1)$, y el que converge en un paso}\end{respuesta}
+\begin{respuesta}[2.6cm]{(b) qué harías en cada caso: $\rho>1$ monótona · $\rho>1$ oscila · $\rho<1$ oscila}\end{respuesta}
+\begin{respuesta}[1.6cm]{(c) el estado más difícil de decidir}\end{respuesta}
+\begin{respuesta}[2.2cm]{(d) mejor $\alpha$ fijo, su porcentaje, y por qué ninguno sirve siempre}\end{respuesta}
+\begin{respuesta}[1.9cm]{(e) estados donde la ley aprendida coincide con tu tabla}\end{respuesta}
+\begin{respuesta}[1.9cm]{(f) por qué invertir y reducir son ambas razonables con $\rho\ge 1{,}5$ monótona}\end{respuesta}
+\begin{respuesta}[2.8cm]{(g) estado ciego: cuánto cae el éxito, qué aprende con $\rho>1$ y por qué}\end{respuesta}
+\begin{respuesta}[2.4cm]{(h) otro observable, o por qué no hace falta}\end{respuesta}
+
+\clearpage
+\begin{respuesta}[3.4cm]{(i) potencial tramposo: cuánto cae, qué hace en $\rho<0{,}25$ oscila, con qué acción se «mueve menos»}\end{respuesta}
+\begin{respuesta}[7.5cm]{(j) el grafo del teorema de Banach}\end{respuesta}
+\begin{respuesta}[2.4cm]{(k) teorema (global) frente a \codigo{D\_LOCAL}: qué hipótesis falta}\end{respuesta}
+\begin{respuesta}[2.8cm]{(l) de dónde sale $k$; qué pasa con \codigo{LIM} si $k\le 1$; relación con \codigo{D\_K1}}\end{respuesta}
+\begin{respuesta}[1.6cm]{(m) quién es responsable}\end{respuesta}
+\begin{respuesta}[3.0cm]{Párrafo final: un observable para controlar el paso de Newton sin conocer $f''$}\end{respuesta}
+\end{document}

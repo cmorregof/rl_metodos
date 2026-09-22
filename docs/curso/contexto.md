@@ -66,7 +66,7 @@ necesitan **proyectos nuevos en el repo** (07–10) con la misma anatomía que 0
 | lab | tema | proyecto | fase 1: qué redescubre el agente | fase 2: teorema | estado |
 |---|---|---|---|---|---|
 | 1 | terminal + bisección | 01 | λ = 1/2 e invariante de Bolzano | convergencia de la bisección | listo |
-| 2 | punto fijo | 02 | ley de control de α (Banach) | punto fijo de Banach | código listo, guía pendiente |
+| 2 | punto fijo | 02 | ley de control de α (Banach); experimentos: α fijo, estado ciego, potencial tramposo, grafo con hueco | punto fijo de Banach | listo (22 sep 2026) |
 | 3 | Taylor | 03 | cuántos términos, cuándo parar, cuándo rendirse | Taylor con resto de Lagrange | código listo, guía pendiente |
 | 4 | Newton y secante | 04 + 05 | salvaguardas (Armijo, Dekker); órdenes 2 y φ | convergencia cuadrática / orden φ | código listo, guía pendiente (una sesión con los dos) |
 | 5 | interpolación | 07 (nuevo) | dónde poner los nodos (Chebyshev emerge frente a equiespaciados, Runge) y cuántos | error de interpolación de Lagrange; fase 3: constante de Lebesgue como verificador, búsqueda de nodos mejores que Chebyshev | en construcción (22 sep 2026) |

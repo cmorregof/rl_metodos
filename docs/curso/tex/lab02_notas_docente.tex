@@ -1,0 +1,56 @@
+\input{preambulo}
+\newcommand{\docpie}{Laboratorio 2 · notas del docente}
+\begin{document}
+\cabecera{Laboratorio 2 · notas del docente}{Punto fijo con un agente de RL · 90 minutos}{Resultados medidos el 22 de septiembre de 2026 (MacBook, Python 3.13, semilla 1). Todo se reproduce con \codigo{docs/curso/lab02/experimentos.py}; cada experimento tarda menos de 1 s.}
+
+\section{Plan de la sesión}
+\begin{tabularx}{\linewidth}{@{}l X l@{}}
+\toprule
+\textbf{min} & \textbf{bloque} & \textbf{modo} \\
+\midrule
+0–10 & instalar 02 (\codigo{venv} nuevo) y comprobar con \codigo{--no-tui} & guiado \\
+10–20 & el problema en la pizarra: $g(x)=x-\alpha f(x)$, $|1-\alpha f'|<1$, $\rho$ como contracción empírica. (a)–(c) en papel & expositivo + parejas \\
+20–30 & \codigo{alfa\_fijo}; plenaria corta sobre (d) & parejas + plenaria \\
+30–45 & correr con animación, hitos, tabla de la ley & parejas \\
+45–60 & \codigo{ciego}; plenaria sobre (g): el estado importa & parejas + plenaria \\
+60–72 & \codigo{potencial}; (i) & parejas \\
+72–85 & \codigo{dibujar}, \codigo{grafo}; plenaria sobre (l) & parejas + plenaria \\
+85–90 & cierre y entrega & expositivo \\
+\bottomrule
+\end{tabularx}
+
+Las ideas de la sesión son (g) y (i): el estado y el potencial son decisiones de diseño, y cada una mal tomada produce un agente que aprende otra cosa. Si se va el tiempo, cortar (h) y (k).
+
+\section{Respuestas y cifras}
+\begin{preguntas}
+\pregunta{a}{$g' = 1-2\alpha$; converge si $|1-2\alpha|<1$, o sea $0<\alpha<1$. Con $\alpha = 1/2 = 1/f'$, $g'=0$ y converge en un paso (es Newton).}
+\pregunta{b}{$\rho>1$ monótona: $\alpha f'<0$, el signo de $\alpha$ está mal $\to$ invertir. $\rho>1$ oscila: $\alpha f'>2$, $\alpha$ demasiado grande $\to$ reducir. $\rho<1$ oscila: $1<\alpha f'<2$, contractivo pero pasado $\to$ reducir. $\rho\in(0{,}5,1)$ monótona: $\alpha f'$ pequeño $\to$ doblar. $\rho<0{,}25$: casi Newton $\to$ mantener.}
+\pregunta{c}{Los cubos intermedios ($0{,}25$–$0{,}5$), donde doblar o mantener dan casi lo mismo. El informe los marca con dos acciones válidas.}
+\pregunta{d}{Medido (300 problemas por $\alpha$): $\alpha=-0{,}5 \to 57\,\%$, $+0{,}5 \to 53\,\%$, $-1 \to 46\,\%$, $+1 \to 30\,\%$, $+0{,}1 \to 23\,\%$, $-0{,}1 \to 7\,\%$. El agente: 92\,\% en las últimas 100 generaciones, 10,9 iteraciones de media. Ningún $\alpha$ fijo sirve porque el banco mezcla $f'(r)>0$ y $f'(r)<0$ (la mitad de los problemas lleva el signo invertido a propósito) y $|f'|$ va de 0,4 a 5.}
+\end{preguntas}
+
+\textbf{Hitos con semilla 1.} «Signo de $\alpha$ mal $\to$ invertir» en la gen 1 (es el estado más visitado al principio); primera convergencia 27; «oscila $\to$ reducir» 59; ley = Banach en los 12 estados en la 680; $\ge 95\,\%$ en la 681. Fase 2: primera completa 198, voraz mínima 225, primera mínima 421.
+
+\begin{preguntas}
+\pregunta{e}{Con 3000 generaciones coincide en 12/12. La tabla del informe es la que imprime \codigo{hitos}.}
+\pregunta{f}{Con $\rho\ge 1{,}5$ monótona, $\alpha f'$ es muy negativo. Invertir lo arregla de golpe; reducir a la mitad también baja $|\alpha f'|$ y en dos o tres pasos llega a lo mismo. Las dos son aceptables en \codigo{theoretical\_action}.}
+\pregunta{g}{Medido: éxito 92\,\% $\to$ 74\,\%; divergencias 255 $\to$ 708. En $\rho>1$ el agente ciego aprende \textbf{invertir} en ambos cubos. Es lo racional: no puede distinguir «signo mal» (invertir) de «$\alpha$ grande» (reducir), y de los dos errores, invertir cuando había que reducir suele salvarse en el paso siguiente, mientras que reducir cuando había que invertir nunca converge. Ejemplo limpio de que la política óptima depende de lo que el estado deja ver.}
+\pregunta{h}{Buenas respuestas: el signo de $f(x_n)\,(x_n - x_{n-1})$ (dice si el paso va hacia la raíz), o el cociente $(x_{n+1}-x_n)/(x_n-x_{n-1})$, que estima $g'$ \emph{con signo} y distingue directamente $g'>1$, $g'<-1$ y $|g'|<1$. Esto último es lo que hace Steffensen/Aitken. Cualquier observable calculable con valores de $f$ y de $x$ ya vistos vale.}
+\pregunta{i}{Medido: éxito 92\,\% $\to$ 59\,\%; ley coincide en 10/12. Desviaciones: en «$\rho<0{,}25$, oscila» reduce $\alpha$ en vez de mantener (reducir $\alpha$ acorta el paso, y eso ahora da puntos); en «$\rho\ge 1{,}5$, oscila» mantiene en vez de reducir. «Moverse menos» se consigue reduciendo $\alpha$, que es una acción del agente; «reducir el residuo» no se consigue con ninguna acción directa, solo acercándose a la raíz. Por eso el potencial debe ser algo que el agente no controle (regla del README raíz). Nota honesta: el efecto es una caída y dos estados torcidos, no un colapso como en el lab 1, porque el episodio solo termina con $|f|<\text{tol}$ y el agente conserva incentivo a converger.}
+\pregunta{j}{Profundidad 5 (QED $\to$ POST $\to$ LIM $\to$ GEO $\to$ ERR $\to$ DEF/EXIST/H2). DEF y H2 se usan en varios sitios. \codigo{dibujar} lo muestra como árbol; el grafo en papel debe fusionar los repetidos.}
+\pregunta{k}{El teorema pide contracción \textbf{en todo $[a,b]$} y que $g$ lleve $[a,b]$ en sí mismo (H1): convergencia global en el intervalo. El distractor solo tiene $|g'(p)|<1$: contracción en un entorno de $p$, convergencia local, y solo si $x_0$ cae en ese entorno. Sin H1 la iteración puede salirse de la zona contractiva. Conecta con la fase 1: el agente diverge a veces (255 de 3000) justo cuando $x_0$ cae lejos y un $\alpha$ mal elegido lo saca.}
+\pregunta{l}{La $k$ de ERR es la constante de contracción de H2. Sin H2 no hay $k$, o solo $k=1$ (Lipschitz con constante 1, lo que da $|g'|\le 1$). Con $k=1$, GEO da $|x_n-p|\le|x_0-p|$: acotado, no convergente; LIM se cae. Es el distractor D\_K1 colado por la puerta de atrás. Ejemplos para la pizarra: $g(x)=x+1$ en $\mathbb{R}$, o $g(x)=-x$ en $[-1,1]$, que cumple $|g(x)-g(y)|=|x-y|$ y no converge.}
+\pregunta{m}{Quien escribió las \codigo{deps}. El verificador solo mira flechas.}
+\pregunta{tarea}{Con \codigo{RATIO\_EDGES = (0.5, 1.0)} (6 estados) el agente pierde la distinción «casi Newton $\to$ mantener» y dobla $\alpha$ de más; el éxito baja unos puntos, no se hunde. Medirlo antes de calificarla.}
+\end{preguntas}
+
+\section{Trampas}
+\begin{itemize}
+\item Cada proyecto tiene su propio \codigo{.venv}. Si usan el de 01 desde 02, \codigo{fixpointrl} no existe.
+\item \codigo{RATIO\_EDGES} y \codigo{theoretical\_action} están acoplados: si cambian los cubos, la columna «teoría» del informe deja de tener sentido. Solo para la tarea opcional, y revertir.
+\item En \codigo{ciego} y \codigo{potencial} el caso [A] se reentrena con la misma semilla; sus cifras deben coincidir con \codigo{hitos}.
+\end{itemize}
+
+\section{Qué se evalúa}
+Rúbrica (10 puntos): tabla de hitos (1), (a)–(d) (2), (e)–(f) (1), (g)–(h) (2), (i) (2), (j)–(m) (2). Pesar (g) e (i).
+\end{document}

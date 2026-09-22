@@ -9,6 +9,8 @@ xelatex 00_terminal_desde_cero.tex
 xelatex lab01_guia_estudiante.tex
 xelatex lab01_notas_docente.tex
 xelatex lab01_teoria_rl.tex
+xelatex lab02_guia_estudiante.tex
+xelatex lab02_notas_docente.tex
 cp *.pdf ../pdf/
 ```
 
