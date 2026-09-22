@@ -78,14 +78,20 @@ El código está en GitHub, una página donde se comparten programas. No necesit
 \item El archivo \codigo{rl\_metodos-main.zip} queda en \codigo{Descargas} (\codigo{Downloads}). Descomprímelo (clic derecho $\to$ \emph{Extraer todo}) y mueve la carpeta \codigo{rl\_metodos-main} a \codigo{Documents\textbackslash metodos}.
 \end{enumerate}
 
-Ahora en la terminal:
+Vuelve a la terminal. Sigues dentro de \codigo{metodos} (míralo en el prompt, o comprueba con \codigo{pwd}). Entra en la carpeta que acabas de mover:
 \begin{orden}
-cd Documents\metodos\rl_metodos-main
+cd rl_metodos-main
 ls
 \end{orden}
 Deberías ver las carpetas \codigo{01\_biseccion}, \codigo{02\_punto\_fijo}, … Si \codigo{ls} no las muestra, no estás en la carpeta correcta: usa \codigo{pwd} para ver dónde estás y \codigo{cd} para moverte.
 
-(En Mac las barras van al revés: \codigo{cd Documents/metodos/rl\_metodos-main}.)
+\begin{nota}[Si cerraste la terminal o estás en otra carpeta]
+Escribe la ruta completa desde tu carpeta de usuario. En Windows las carpetas se separan con \codigo{\textbackslash}; en Mac y Linux con \codigo{/}, y una \codigo{\textbackslash} en Mac significa otra cosa (se «come» la letra siguiente):
+\begin{orden}
+cd Documents\metodos\rl_metodos-main     (Windows)
+cd Documents/metodos/rl_metodos-main     (Mac)
+\end{orden}
+\end{nota}
 
 \section{Instalar el proyecto de hoy}
 

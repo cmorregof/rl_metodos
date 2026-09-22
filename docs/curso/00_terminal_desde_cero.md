@@ -92,17 +92,25 @@ El código está en GitHub, una página donde se comparten programas. No necesit
 3. El archivo `rl_metodos-main.zip` queda en `Descargas` (`Downloads`). Descomprímelo
    (clic derecho → *Extraer todo*) y mueve la carpeta `rl_metodos-main` a `Documents\metodos`.
 
-Ahora en la terminal:
+Vuelve a la terminal. Sigues dentro de `metodos` (míralo en el prompt, o comprueba con `pwd`).
+Entra en la carpeta que acabas de mover:
 
 ```
-cd Documents\metodos\rl_metodos-main
+cd rl_metodos-main
 ls
 ```
 
 Deberías ver las carpetas `01_biseccion`, `02_punto_fijo`, … Si `ls` no las muestra, no estás
 en la carpeta correcta: usa `pwd` para ver dónde estás y `cd` para moverte.
 
-(En Mac las barras van al revés: `cd Documents/metodos/rl_metodos-main`.)
+**Si cerraste la terminal o estás en otra carpeta**, escribe la ruta completa desde tu carpeta
+de usuario. En Windows las carpetas se separan con `\`; en Mac y Linux con `/`, y una `\` en Mac
+significa otra cosa (se "come" la letra siguiente):
+
+```
+cd Documents\metodos\rl_metodos-main     (Windows)
+cd Documents/metodos/rl_metodos-main     (Mac)
+```
 
 ## 6 · Instalar el proyecto de hoy
 
