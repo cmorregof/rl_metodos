@@ -5,8 +5,15 @@
 Antes de este laboratorio lee [la terminal desde cero](../00_terminal_desde_cero.md).
 Los primeros 30 minutos de la sesión son para hacer lo que dice esa guía, con ayuda.
 
-Todas las órdenes de abajo se escriben dentro de la carpeta `01_biseccion` y empiezan por
-`.venv\Scripts\python` (en Mac, `.venv/bin/python`).
+Todas las órdenes de abajo se escriben dentro de la carpeta `01_biseccion` y están escritas
+para Windows. **Si usas Mac o Linux**, cambia dos cosas en cada orden, siempre las mismas:
+
+| Windows | Mac / Linux |
+|---|---|
+| `.venv\Scripts\python` | `.venv/bin/python` |
+| `..\docs\curso\lab01\experimentos.py` | `../docs/curso/lab01/experimentos.py` |
+
+Si ves `command not found: .venvScriptspython`, es esto: la barra invertida no existe en Mac.
 
 ## Qué vas a hacer
 
