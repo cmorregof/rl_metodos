@@ -51,23 +51,29 @@ Eso es un problema de \textbf{aprendizaje por refuerzo} (RL): un \emph{agente} o
 \end{orden}
 Observa los paneles (la ventana debe estar maximizada). En la bitácora aparecen los hitos. Anota la generación de cada uno:
 
-\begin{tabularx}{\linewidth}{@{}X l@{}}
-\toprule
-\textbf{hito} & \textbf{generación} \\
-\midrule
-primera convergencia & \\
-«aprendió el invariante de Bolzano» & \\
-«descubrió $\lambda = 1/2$» & \\
-primera demostración completa & \\
-primera demostración sin saltos lógicos & \\
-\bottomrule
+\renewcommand{\arraystretch}{2.1}
+\begin{tabularx}{\linewidth}{|X|c|c|}
+\hline
+\textbf{hito} & \textbf{gen. (seed 1)} & \textbf{gen. (seed 2)} \\
+\hline
+primera convergencia & \hspace{2.6cm} & \hspace{2.6cm} \\
+\hline
+«aprendió el invariante de Bolzano» & & \\
+\hline
+«descubrió $\lambda = 1/2$» & & \\
+\hline
+primera demostración completa & & \\
+\hline
+primera demostración sin saltos lógicos & & \\
+\hline
 \end{tabularx}
+\renewcommand{\arraystretch}{1.25}
 
 Al terminar se guarda \codigo{runs\textbackslash <fecha>\textbackslash informe.md}. Ábrelo con el Bloc de notas y lee la sección \textbf{«Síntesis»}.
 
 \begin{preguntas}
 \pregunta{d}{En la tabla $Q(\lambda)$, ¿qué significa que $Q(0{,}5)\approx 0$ y $Q(0{,}1)\approx -0{,}6$? Relaciónalo con (a).}
-\pregunta{e}{Corre otra vez con \codigo{--seed 2}. ¿Cambian las generaciones de los hitos? ¿Cambia lo aprendido?}
+\pregunta{e}{Corre otra vez con \codigo{--seed 2} y completa la segunda columna. ¿Cambian las generaciones de los hitos? ¿Cambia lo aprendido?}
 \end{preguntas}
 
 \section{Rómpelo: la recompensa es la especificación \hfill\small\normalfont 55–70 min}
@@ -117,16 +123,36 @@ Quitamos una sola dependencia: el paso \codigo{ROOT} («$f(c)^2\le 0$, luego $f(
 
 Entrega (una por pareja, en Word o en texto, antes de la próxima sesión):
 \begin{enumerate}
-\item La tabla de hitos con dos semillas.
-\item Respuestas a (a)–(n). Una respuesta correcta suele caber en dos líneas.
-\item Un párrafo: \emph{si tuvieras que escribir el grafo de otro teorema del curso, ¿cuál elegirías y cuáles serían sus hipótesis y su \qed?} Esto es la semilla del proyecto final.
+\item La tabla de hitos con dos semillas (página 2).
+\item Las respuestas a (a)–(n) en la hoja de entrega de las páginas siguientes. Una respuesta correcta suele caber en dos líneas.
+\item El párrafo final de la hoja de entrega. Esto es la semilla del proyecto final.
 \end{enumerate}
+Puedes entregar esta misma hoja escrita a mano, o el mismo contenido en Word.
 
 \begin{nota}[Tarea opcional]
 Añade en \codigo{proof\_kb.py} un distractor propio: un paso que \textbf{tú} habrías escrito en un examen y que está mal. Basta una línea como \codigo{Step("D\_MIO", "Distractor", "texto", distractor=True)} dentro de la lista \codigo{STEPS}. Corre con \codigo{--no-tui} y busca en el informe cuántas veces lo intentó el agente.
 \end{nota}
 
-\subsection*{Hacia dónde va esto}
+\textbf{Hacia dónde va esto.} En las próximas sesiones el agente aprenderá punto fijo, Taylor, Newton, interpolación, integración, sistemas lineales y ecuaciones diferenciales con la misma receta. Luego \textbf{tú} escribirás el grafo de un teorema nuevo y las recompensas de un método. Y al final el verificador no será un grafo escrito a mano sino un programa que certifica cada propuesta: ahí el agente sí puede encontrar cosas que nadie le dijo.
 
-En las próximas sesiones el agente aprenderá punto fijo, Taylor, Newton, interpolación, integración, sistemas lineales y ecuaciones diferenciales con la misma receta. Luego cambiará el juego: \textbf{tú} escribirás el grafo de un teorema que no está en el repositorio y diseñarás las recompensas de un método. Y al final veremos qué pasa cuando el verificador no es un grafo escrito a mano sino un programa que certifica cada propuesta: ahí el agente sí puede encontrar cosas que nadie le dijo.
+\clearpage
+\cabecera{Hoja de entrega · Laboratorio 1}{Nombres: \rule{7cm}{0.4pt}}{Fecha: \rule{3cm}{0.4pt} \quad Semillas usadas: \rule{2cm}{0.4pt}}
+
+\begin{respuesta}[1.6cm]{(a) puntos por paso con $\lambda = 0{,}5$}\end{respuesta}
+\begin{respuesta}[1.6cm]{(b) ¿bastan los signos?}\end{respuesta}
+\begin{respuesta}[1.9cm]{(c) predicción de $\lambda$ y por qué}\end{respuesta}
+\begin{respuesta}[1.9cm]{(d) qué significan $Q(0{,}5)\approx 0$ y $Q(0{,}1)\approx -0{,}6$}\end{respuesta}
+\begin{respuesta}[1.6cm]{(e) con otra semilla, ¿qué cambia y qué no?}\end{respuesta}
+\begin{respuesta}[3.2cm]{(f) perder la raíz cuesta 0: cuántas convergencias, qué aprendió, por qué es racional}\end{respuesta}
+\begin{respuesta}[1.9cm]{(g) paso gratis: ¿por qué sigue eligiendo $\lambda = 1/2$?}\end{respuesta}
+\begin{respuesta}[2.6cm]{(h) una recompensa que parece razonable y cómo la explotaría el agente}\end{respuesta}
+\begin{respuesta}[2.4cm]{(i) sin la opción $0{,}5$: qué elige, y dibujo de $Q(\lambda)$}\end{respuesta}
+
+\clearpage
+\begin{respuesta}[8.5cm]{(j) el grafo de la demostración (nodos, flechas, hipótesis marcadas, \qed)}\end{respuesta}
+\begin{respuesta}[2.0cm]{(k) qué le falta al distractor «por Bolzano existe raíz, luego el método converge»}\end{respuesta}
+\begin{respuesta}[2.0cm]{(l) ¿el agente entendió la demostración? ¿qué aprendió realmente?}\end{respuesta}
+\begin{respuesta}[2.6cm]{(m) dónde está el hueco sin \codigo{INV}}\end{respuesta}
+\begin{respuesta}[2.0cm]{(n) ¿quién es responsable de que la demostración sea correcta?}\end{respuesta}
+\begin{respuesta}[4.2cm]{Párrafo final: si escribieras el grafo de otro teorema del curso, ¿cuál, con qué hipótesis y qué \qed?}\end{respuesta}
 \end{document}
