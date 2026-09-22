@@ -88,7 +88,11 @@ progreso telescopa: `Σ log₂(wₖ₋₁/wₖ) = log₂(w₀/wₙ)`, así que e
 
 **(h)** Respuestas típicas buenas: "premiar por cada evaluación de f" (evaluaría infinito), "premiar
 que `|f(x)|` sea pequeño" (se estanca donde `f` es plana), "premiar solo al final" (aprende más lento
-pero no se puede engañar). Cualquier respuesta que identifique *qué haría el agente* vale.
+pero no se puede engañar). Cualquier respuesta que identifique *qué haría el agente* vale. Medido con los flags del script: `--perder-raiz 0` da 0
+convergencias (caso B); `--paso 0 --converger 50` sigue convergiendo (el bono final no cambia nada porque la cabeza de
+corte es miope); y **`--paso 1`, premiar cada evaluación, no se explota**: el agente sigue convergiendo al 100 %. Matiz
+honesto: las dos cabezas de la fase 1 usan γ = 0, solo miran la recompensa inmediata y no pueden "planear" alargar el
+episodio. Un agente con γ > 0 sí lo explotaría. Lo que se puede explotar depende de la recompensa *y* del agente.
 
 **(i)** Medido sin 0.5: elige λ = 0.4 con `Q(0.4) = −0.029`, `Q(0.6) = −0.039`; la curva es simétrica
 en forma de "V invertida" con máximo en 0.5. Las diferencias 0.4/0.6 son ruido de muestreo; pedir

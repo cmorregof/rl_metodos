@@ -99,7 +99,14 @@ Corre tres entrenamientos: el original, uno donde \textbf{perder la raíz cuesta
 \begin{preguntas}
 \pregunta{f}{En el caso «perder la raíz cuesta 0», ¿cuántas veces converge el agente? ¿Qué aprendió a hacer? Explica \textbf{por qué es racional} desde el punto de vista de los puntos. (Pista: compara lo que gana un episodio que pierde la raíz en el primer paso con uno que biseca 12 veces.)}
 \pregunta{g}{En el caso «cada paso es gratis», el agente sigue eligiendo $\lambda = 1/2$. ¿Por qué?}
-\pregunta{h}{Propón otra recompensa que \textbf{parezca} razonable y que el agente pueda explotar sin resolver el problema. Descríbela y di qué haría el agente.}
+\end{preguntas}
+
+Ahora inventa tú los puntos. Los tres números de la recompensa se pueden fijar desde la terminal (los originales son $-10$, $-1$ y $0$):
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py recompensa --perder-raiz 0 --paso -1 --converger 0
+\end{orden}
+\begin{preguntas}
+\pregunta{h}{Propón una recompensa que \textbf{parezca} razonable y que el agente pueda explotar sin resolver el problema. Antes de correrla, escribe qué crees que hará. Luego pruébala con la orden de arriba y anota qué hizo de verdad (convergencias, raíces perdidas, $\lambda^*$).}
 \end{preguntas}
 
 Si te sobra tiempo:

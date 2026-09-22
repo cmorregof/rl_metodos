@@ -5,6 +5,7 @@ Se ejecuta desde 01_biseccion con su entorno virtual activado:
     cd 01_biseccion && source .venv/bin/activate
     python ../docs/curso/lab01/experimentos.py generaciones
     python ../docs/curso/lab01/experimentos.py recompensa
+    python ../docs/curso/lab01/experimentos.py recompensa --perder-raiz 0 --paso -1 --converger 0
     python ../docs/curso/lab01/experimentos.py sin_medio
     python ../docs/curso/lab01/experimentos.py grafo
 
@@ -55,9 +56,23 @@ def exp_generaciones() -> None:
                 print(f"                     hito gen {m.episode}: {m.text}")
 
 
-def exp_recompensa() -> None:
-    """¿Qué pasa si perder la raíz no cuesta nada? ¿Y si cada paso es gratis?"""
-    base_lost, base_step = E.REWARD_LOST_ROOT, E.REWARD_STEP
+def exp_recompensa(perder_raiz: float | None = None, paso: float | None = None, converger: float | None = None, seed: int = 1) -> None:
+    """¿Qué pasa si perder la raíz no cuesta nada? ¿Y si cada paso es gratis?
+
+    Sin argumentos corre los tres casos fijos. Con --perder-raiz / --paso / --converger
+    entrena una vez con esos valores: es la forma de probar una recompensa propia."""
+    base_lost, base_step, base_conv = E.REWARD_LOST_ROOT, E.REWARD_STEP, E.REWARD_CONVERGED
+    if perder_raiz is not None or paso is not None or converger is not None:
+        try:
+            E.REWARD_LOST_ROOT = base_lost if perder_raiz is None else perder_raiz
+            E.REWARD_STEP = base_step if paso is None else paso
+            E.REWARD_CONVERGED = base_conv if converger is None else converger
+            print(f"recompensa: perder la raíz = {E.REWARD_LOST_ROOT:+g}, cada paso = {E.REWARD_STEP:+g}, "
+                  f"al converger = {E.REWARD_CONVERGED:+g} (semilla {seed})")
+            print("resultado:  ", resumen_fase1(entrenar(2000, 10, seed)))
+        finally:
+            E.REWARD_LOST_ROOT, E.REWARD_STEP, E.REWARD_CONVERGED = base_lost, base_step, base_conv
+        return
     try:
         print("[A] perder la raíz cuesta −10 (original):", resumen_fase1(entrenar(2000, 10)))
         E.REWARD_LOST_ROOT = 0.0
@@ -108,5 +123,16 @@ def exp_grafo() -> None:
 
 
 if __name__ == "__main__":
-    which = sys.argv[1] if len(sys.argv) > 1 else "generaciones"
-    {"generaciones": exp_generaciones, "recompensa": exp_recompensa, "sin_medio": exp_sin_medio, "grafo": exp_grafo}[which]()
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Experimentos del laboratorio 1 sobre el agente de bisección.")
+    ap.add_argument("experimento", choices=["generaciones", "recompensa", "sin_medio", "grafo"], nargs="?", default="generaciones")
+    ap.add_argument("--perder-raiz", type=float, help="recompensa por conservar el lado sin cambio de signo (original: -10)")
+    ap.add_argument("--paso", type=float, help="recompensa por cada evaluación de f (original: -1)")
+    ap.add_argument("--converger", type=float, help="bono al bajar de la tolerancia (original: 0)")
+    ap.add_argument("--seed", type=int, default=1)
+    args = ap.parse_args()
+    if args.experimento == "recompensa":
+        exp_recompensa(args.perder_raiz, args.paso, args.converger, args.seed)
+    else:
+        {"generaciones": exp_generaciones, "sin_medio": exp_sin_medio, "grafo": exp_grafo}[args.experimento]()

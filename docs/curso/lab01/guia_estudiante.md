@@ -102,8 +102,16 @@ y uno donde **cada paso es gratis**.
   hacer? Explica **por qué es racional** desde el punto de vista de los puntos. (Pista: compara
   lo que gana un episodio que pierde la raíz en el primer paso con uno que biseca 12 veces.)
 - (g) En el caso "cada paso es gratis", el agente sigue eligiendo λ = 1/2. ¿Por qué?
-- (h) Propón otra recompensa que **parezca** razonable y que el agente pueda explotar sin
-  resolver el problema. Descríbela y di qué haría el agente.
+Ahora inventa tú los puntos. Los tres números de la recompensa se pueden fijar desde la
+terminal (los originales son −10, −1 y 0):
+
+```
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py recompensa --perder-raiz 0 --paso -1 --converger 0
+```
+
+- (h) Propón una recompensa que **parezca** razonable y que el agente pueda explotar sin
+  resolver el problema. Antes de correrla, escribe qué crees que hará. Luego pruébala con la
+  orden de arriba y anota qué hizo de verdad (convergencias, raíces perdidas, λ*).
 
 Si te sobra tiempo:
 
