@@ -7,6 +7,7 @@ Se ejecuta desde 01_biseccion con su entorno virtual activado:
     python ../docs/curso/lab01/experimentos.py recompensa
     python ../docs/curso/lab01/experimentos.py recompensa --perder-raiz 0 --paso -1 --converger 0
     python ../docs/curso/lab01/experimentos.py sin_medio
+    python ../docs/curso/lab01/experimentos.py dibujar     # el grafo de la demostración
     python ../docs/curso/lab01/experimentos.py grafo
 
 No modifica los archivos del paquete: cambia constantes en memoria y entrena de nuevo.
@@ -100,15 +101,55 @@ def exp_sin_medio() -> None:
         T.LAMBDAS = original
 
 
+def dibujar_grafo(resaltar: str | None = None, falta: str | None = None) -> None:
+    """Árbol de dependencias desde ∎ hacia las hipótesis. Cada nodo cuelga de los pasos que lo usan.
+    Un paso que aparece varias veces se dibuja completo la primera y en gris después."""
+    from rich.console import Console
+    from rich.tree import Tree
+
+    console = Console()
+    visto: set[str] = set()
+
+    def rama(key: str, arbol: Tree) -> None:
+        st = KB.step_by_key(key)
+        etiqueta = f"[bold]{key}[/] [dim]{st.title}[/]"
+        if key == resaltar:
+            etiqueta = f"[bold red]{key}[/] [red]{st.title}[/]  [red]← ya no exige {falta}[/]"
+        if key in visto:
+            arbol.add(f"[dim]{key} (ya dibujado)[/]")
+            return
+        visto.add(key)
+        nodo = arbol.add(etiqueta)
+        for d in st.deps:
+            rama(d, nodo)
+        if key == resaltar and falta:
+            nodo.add(f"[red strike]{falta}[/] [red]{KB.step_by_key(falta).title}  ← el hueco[/]")
+
+    raiz = Tree("[bold green]∎ QED[/]  (se lee de arriba abajo: cada paso necesita lo que cuelga de él)")
+    for d in KB.step_by_key("QED").deps:
+        rama(d, raiz)
+    console.print(raiz)
+    hojas = [k for k in KB.REQUIRED_KEYS if not KB.step_by_key(k).deps]
+    console.print(f"[dim]hipótesis (sin dependencias): {', '.join(sorted(hojas))} · pasos necesarios: {KB.MIN_PROOF_LENGTH} · distractores: {sum(1 for x in KB.STEPS if x.distractor)}[/]\n")
+
+
 def exp_grafo() -> None:
     """Quitar una dependencia del grafo: ROOT deja de necesitar INV.
     El verificador acepta entonces una "demostración" que nunca prueba que el cambio
     de signo se conserva. Comprobación directa, sin entrenar."""
     i = KB.KEY_TO_INDEX["ROOT"]
     original = KB.STEPS[i]
+    print("=== el grafo original ===")
+    dibujar_grafo()
+    req, minlen = KB.REQUIRED_KEYS, KB.MIN_PROOF_LENGTH
     try:
         KB.STEPS[i] = replace(original, deps=("CONT",))
         KB.DEPS_MASK[i] = KB.deps_mask(KB.STEPS[i])
+        KB.REQUIRED_KEYS = frozenset(KB._closure("QED", set()))
+        KB.MIN_PROOF_LENGTH = len(KB.REQUIRED_KEYS)
+        print("=== el grafo con la dependencia quitada ===")
+        dibujar_grafo(resaltar="ROOT", falta="INV")
+        print("=== una demostración sin INV, paso a paso ante el verificador ===")
         orden = ["H1", "H2", "DEF", "WIDTH", "MONO_A", "MONO_B", "CONV_A", "CONV_B", "SAME", "CONT", "ROOT", "MID", "QED"]
         env = ProofEnv()
         env.reset()
@@ -120,13 +161,14 @@ def exp_grafo() -> None:
     finally:
         KB.STEPS[i] = original
         KB.DEPS_MASK[i] = KB.deps_mask(original)
+        KB.REQUIRED_KEYS, KB.MIN_PROOF_LENGTH = req, minlen
 
 
 if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description="Experimentos del laboratorio 1 sobre el agente de bisección.")
-    ap.add_argument("experimento", choices=["generaciones", "recompensa", "sin_medio", "grafo"], nargs="?", default="generaciones")
+    ap.add_argument("experimento", choices=["generaciones", "recompensa", "sin_medio", "grafo", "dibujar"], nargs="?", default="generaciones")
     ap.add_argument("--perder-raiz", type=float, help="recompensa por conservar el lado sin cambio de signo (original: -10)")
     ap.add_argument("--paso", type=float, help="recompensa por cada evaluación de f (original: -1)")
     ap.add_argument("--converger", type=float, help="bono al bajar de la tolerancia (original: 0)")
@@ -135,4 +177,4 @@ if __name__ == "__main__":
     if args.experimento == "recompensa":
         exp_recompensa(args.perder_raiz, args.paso, args.converger, args.seed)
     else:
-        {"generaciones": exp_generaciones, "sin_medio": exp_sin_medio, "grafo": exp_grafo}[args.experimento]()
+        {"generaciones": exp_generaciones, "sin_medio": exp_sin_medio, "grafo": exp_grafo, "dibujar": dibujar_grafo}[args.experimento]()

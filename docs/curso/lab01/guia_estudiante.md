@@ -128,6 +128,13 @@ está escrito como **14 pasos con dependencias** (`deps`) más **7 distractores*
 
 - (j) Dibuja en papel el grafo: un nodo por paso, una flecha desde cada dependencia hacia el
   paso que la usa. Marca las hipótesis (sin flechas de entrada) y ∎.
+Cuando lo tengas en papel, compáralo con el que dibuja el programa (sale como un árbol desde ∎
+hacia las hipótesis):
+
+```
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py dibujar
+```
+
 - (k) El distractor `D_BOLZ` dice: "por Bolzano existe una raíz, luego el método converge a
   ella". ¿Qué le falta?
 - (l) Compara tu grafo con la demostración del agente en `runs\<fecha>\demostracion.md`.
