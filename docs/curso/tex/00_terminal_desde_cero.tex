@@ -1,0 +1,125 @@
+\input{preambulo}
+\newcommand{\docpie}{La terminal desde cero}
+\begin{document}
+\cabecera{La terminal desde cero}{Métodos numéricos · guía para la primera sesión}{Léela antes de tocar nada. Diez minutos.}
+
+\section{Qué es la terminal}
+
+Todo lo que haces con el ratón (abrir una carpeta, abrir un programa, crear un archivo) se puede hacer \textbf{escribiendo órdenes}. El programa donde se escriben esas órdenes es la \textbf{terminal}: una ventana negra (o azul) con un cursor parpadeando. Parece de hacker; no lo es. Es solo otra forma de decirle al computador qué hacer, más precisa y más rápida.
+
+Una orden se escribe, se pulsa \textbf{Enter}, y el computador responde con texto. Eso es todo.
+
+¿Por qué la usamos en este curso? Porque los programas que vamos a correr no tienen botones. Se ejecutan con una orden, escriben su resultado en la terminal y guardan archivos en una carpeta. Así trabaja casi toda la matemática computacional.
+
+\section{Abrir la terminal}
+
+\textbf{Windows (los PCs del laboratorio):} pulsa la tecla Windows, escribe \codigo{terminal} y abre \textbf{Terminal} (o \textbf{Windows PowerShell} si no aparece). Maximiza la ventana: la vamos a necesitar grande.
+
+\textbf{Mac:} Cmd + espacio, escribe \codigo{terminal}, Enter.
+
+Verás algo así:
+\begin{orden}
+PS C:\Users\estudiante>
+\end{orden}
+Eso se llama el \textbf{prompt}. Te dice \textbf{en qué carpeta estás} (\codigo{C:\textbackslash Users\textbackslash estudiante}) y espera una orden. En Mac se ve parecido pero con \codigo{/Users/nombre} y termina en \codigo{\%} o \codigo{\$}.
+
+\section{Las cinco órdenes que necesitas}
+
+Escribe cada una y pulsa Enter. Fíjate en lo que responde.
+
+\begin{tabularx}{\linewidth}{@{}l X l@{}}
+\toprule
+\textbf{orden} & \textbf{qué hace} & \textbf{ejemplo} \\
+\midrule
+\codigo{pwd} & te dice en qué carpeta estás (\emph{print working directory}) & \codigo{pwd} \\
+\codigo{ls} & lista lo que hay en la carpeta actual (\emph{list}) & \codigo{ls} \\
+\codigo{cd nombre} & entra en la carpeta \codigo{nombre} (\emph{change directory}) & \codigo{cd Documents} \\
+\codigo{cd ..} & sube a la carpeta de arriba & \codigo{cd ..} \\
+\codigo{mkdir nombre} & crea una carpeta & \codigo{mkdir metodos} \\
+\bottomrule
+\end{tabularx}
+
+Tres trucos que ahorran mucho sufrimiento:
+\begin{itemize}
+\item \textbf{Tab} completa nombres. Escribe \codigo{cd Doc} y pulsa Tab: se convierte en \codigo{cd Documents}.
+\item \textbf{Flecha arriba} repite la orden anterior. No vuelvas a escribir nada largo.
+\item Si escribes algo mal, la terminal te lo dice en rojo o con «no se reconoce». No pasa nada. Corrige y vuelve a intentar. \textbf{No puedes romper el computador con estas órdenes.}
+\end{itemize}
+
+Prueba ahora:
+\begin{orden}
+cd Documents
+mkdir metodos
+cd metodos
+pwd
+\end{orden}
+Deberías ver \codigo{C:\textbackslash Users\textbackslash <tu usuario>\textbackslash Documents\textbackslash metodos}. Esa es tu carpeta de trabajo del curso.
+
+\section{Qué significa «correr código»}
+
+Un programa es un archivo de texto con instrucciones. \textbf{Python} es el programa que lee esas instrucciones y las ejecuta. Cuando en la terminal escribes
+\begin{orden}
+python archivo.py
+\end{orden}
+le estás diciendo: «Python, lee \codigo{archivo.py} y haz lo que dice». Python trabaja, escribe resultados en la terminal, y cuando termina vuelve a aparecer el prompt.
+
+Comprueba que Python está instalado:
+\begin{orden}
+python --version
+\end{orden}
+Debe responder \codigo{Python 3.1x.x}. Si dice que no se reconoce, avisa al docente (en Windows a veces la orden es \codigo{py} en vez de \codigo{python}; prueba \codigo{py --version}).
+
+\section{Descargar el material del curso}
+
+El código está en GitHub, una página donde se comparten programas. No necesitas cuenta.
+\begin{enumerate}
+\item Abre en el navegador: \url{https://github.com/cmorregof/rl_metodos}
+\item Botón verde \textbf{Code} $\to$ \textbf{Download ZIP}.
+\item El archivo \codigo{rl\_metodos-main.zip} queda en \codigo{Descargas} (\codigo{Downloads}). Descomprímelo (clic derecho $\to$ \emph{Extraer todo}) y mueve la carpeta \codigo{rl\_metodos-main} a \codigo{Documents\textbackslash metodos}.
+\end{enumerate}
+
+Ahora en la terminal:
+\begin{orden}
+cd Documents\metodos\rl_metodos-main
+ls
+\end{orden}
+Deberías ver las carpetas \codigo{01\_biseccion}, \codigo{02\_punto\_fijo}, … Si \codigo{ls} no las muestra, no estás en la carpeta correcta: usa \codigo{pwd} para ver dónde estás y \codigo{cd} para moverte.
+
+(En Mac las barras van al revés: \codigo{cd Documents/metodos/rl\_metodos-main}.)
+
+\section{Instalar el proyecto de hoy}
+
+Cada carpeta es un proyecto independiente. Entra en el primero y crea un «entorno»: una carpeta privada donde Python instala lo que ese proyecto necesita sin tocar nada más del computador.
+\begin{orden}
+cd 01_biseccion
+python -m venv .venv
+.venv\Scripts\python -m pip install -e ".[dev]"
+\end{orden}
+(Mac: \codigo{.venv/bin/python -m pip install -e ".[dev]"}.)
+
+La segunda orden tarda unos segundos y no dice nada. La tercera escribe muchas líneas; lo importante es que la última diga \codigo{Successfully installed ...}. Si aparece un error rojo, levanta la mano.
+
+\begin{nota}[Desde ahora]
+«El Python del proyecto» es \codigo{.venv\textbackslash Scripts\textbackslash python}. Cada orden del laboratorio empieza así. Nunca hace falta escribir \codigo{activate}.
+\end{nota}
+
+\section{Correr el agente}
+\begin{orden}
+.venv\Scripts\python -m bisectrl --seed 1
+\end{orden}
+Se abre una pantalla llena de paneles que se mueven. Es un programa aprendiendo en vivo. Dura uno o dos minutos. Si la ventana es pequeña se verá recortado: maximízala y vuelve a correr (flecha arriba, Enter).
+
+Cuando termina, imprime un informe y dice dónde lo guardó: en la carpeta \codigo{runs}, en una subcarpeta con la fecha y hora. Ábrela desde el explorador de archivos y abre \codigo{informe.md} con el Bloc de notas (o con VS Code si está instalado). Es texto plano: se lee igual.
+
+\section{Si algo se atasca}
+\begin{itemize}
+\item El programa no termina y quieres pararlo: \textbf{Ctrl + C}.
+\item La terminal «se quedó rara»: ciérrala, abre otra y vuelve a la carpeta con \codigo{cd}.
+\item «No se reconoce el comando»: revisa mayúsculas y que estés en la carpeta correcta (\codigo{pwd}).
+\item Windows PowerShell dice algo de «ejecución de scripts deshabilitada»: es que escribiste \codigo{activate}; no hace falta. Usa siempre \codigo{.venv\textbackslash Scripts\textbackslash python}.
+\end{itemize}
+
+\section{Lo que acabas de aprender}
+
+Sabes abrir una terminal, moverte por carpetas, comprobar que Python existe, crear un entorno para un proyecto y ejecutar un programa que escribe archivos. Eso es el 90\,\% de lo que hace un matemático computacional al empezar cualquier cosa. El otro 10\,\% es leer lo que el programa dice cuando falla, y eso se aprende fallando.
+\end{document}

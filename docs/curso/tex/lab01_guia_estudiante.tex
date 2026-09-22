@@ -1,0 +1,132 @@
+\input{preambulo}
+\newcommand{\docpie}{Laboratorio 1 · guía del estudiante}
+\begin{document}
+\cabecera{Laboratorio 1 · Aprender a bisecar}{Un agente que redescubre el método y demuestra que funciona}{Métodos numéricos · Matemáticas · 90 minutos · en parejas, en los PCs del laboratorio}
+
+Antes de este laboratorio lee \emph{La terminal desde cero}. Los primeros 30 minutos de la sesión son para hacer lo que dice esa guía, con ayuda. Todas las órdenes de abajo se escriben dentro de la carpeta \codigo{01\_biseccion} y empiezan por \codigo{.venv\textbackslash Scripts\textbackslash python} (en Mac, \codigo{.venv/bin/python}).
+
+\subsection*{Qué vas a hacer}
+
+Vas a mirar cómo un programa que \textbf{no conoce el método de bisección} lo redescubre solo, a base de premios y castigos. Después vas a romperlo a propósito para entender qué lo hace funcionar. Y al final vas a ver que «demostrar» el teorema de convergencia se puede plantear como un juego con reglas, y quién escribe las reglas.
+
+Al terminar deberías poder explicar:
+\begin{enumerate}
+\item qué son \emph{estado}, \emph{acción}, \emph{recompensa} y \emph{política} en un problema de aprendizaje por refuerzo;
+\item por qué la recompensa es la verdadera especificación del problema, y cómo se engaña a un agente;
+\item qué demuestra de verdad el «agente que demuestra», y qué parte del trabajo es tuya.
+\end{enumerate}
+
+\section{Terminal e instalación \hfill\small\normalfont 0–30 min}
+
+Sigue la guía de la terminal hasta el punto 6. Comprueba que estás listo con:
+\begin{orden}
+.venv\Scripts\python -m bisectrl --no-tui --seed 1
+\end{orden}
+Debe terminar en un segundo e imprimir un informe. Si lo hace, levanta la mano para que el docente lo vea y sigue.
+
+\section{El juego \hfill\small\normalfont 30–40 min, en papel}
+
+El método de bisección: $f$ continua en $[a,b]$ con $f(a)\,f(b)<0$. Se evalúa en el punto medio, se conserva la mitad donde $f$ cambia de signo, se repite.
+
+Ahora imagina que \textbf{no sabes} que hay que cortar en el medio ni cuál mitad conservar. En cada paso decides dos cosas:
+\begin{itemize}
+\item \textbf{dónde cortar:} una fracción $\lambda$ del intervalo, entre $0{,}1$ y $0{,}9$;
+\item \textbf{qué lado conservar:} el izquierdo o el derecho.
+\end{itemize}
+Después de cada paso alguien te da puntos: $-1$ por cada evaluación de $f$ (evaluar cuesta), más $\log_2(\text{ancho anterior}/\text{ancho nuevo})$ (premio por encoger el intervalo), y $-10$ con fin del juego si el intervalo que conservas ya no tiene cambio de signo.
+
+Eso es un problema de \textbf{aprendizaje por refuerzo} (RL): un \emph{agente} observa un \emph{estado}, elige una \emph{acción}, recibe una \emph{recompensa}, y repite miles de veces hasta que su \emph{política} (qué hace en cada estado) es buena. No le dicen qué es «bueno»; solo le dan puntos.
+
+\begin{nota}[Responde antes de correr nada]
+\begin{preguntas}
+\pregunta{a}{Si cortas siempre en $\lambda=0{,}5$, ¿cuántos puntos ganas por paso?}
+\pregunta{b}{¿Basta ver los \textbf{signos} de $f(a)$, $f(x)$, $f(b)$ para decidir qué lado conservar?}
+\pregunta{c}{Predice: ¿qué $\lambda$ va a preferir el agente? ¿Por qué?}
+\end{preguntas}
+\end{nota}
+
+\section{Mira cómo aprende \hfill\small\normalfont 40–55 min}
+\begin{orden}
+.venv\Scripts\python -m bisectrl --seed 1
+\end{orden}
+Observa los paneles (la ventana debe estar maximizada). En la bitácora aparecen los hitos. Anota la generación de cada uno:
+
+\begin{tabularx}{\linewidth}{@{}X l@{}}
+\toprule
+\textbf{hito} & \textbf{generación} \\
+\midrule
+primera convergencia & \\
+«aprendió el invariante de Bolzano» & \\
+«descubrió $\lambda = 1/2$» & \\
+primera demostración completa & \\
+primera demostración sin saltos lógicos & \\
+\bottomrule
+\end{tabularx}
+
+Al terminar se guarda \codigo{runs\textbackslash <fecha>\textbackslash informe.md}. Ábrelo con el Bloc de notas y lee la sección \textbf{«Síntesis»}.
+
+\begin{preguntas}
+\pregunta{d}{En la tabla $Q(\lambda)$, ¿qué significa que $Q(0{,}5)\approx 0$ y $Q(0{,}1)\approx -0{,}6$? Relaciónalo con (a).}
+\pregunta{e}{Corre otra vez con \codigo{--seed 2}. ¿Cambian las generaciones de los hitos? ¿Cambia lo aprendido?}
+\end{preguntas}
+
+\section{Rómpelo: la recompensa es la especificación \hfill\small\normalfont 55–70 min}
+
+El agente no sabe qué es «bisecar bien». Solo sabe qué le da puntos. Vamos a cambiar los puntos.
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py recompensa
+\end{orden}
+Corre tres entrenamientos: el original, uno donde \textbf{perder la raíz cuesta 0} en vez de $-10$, y uno donde \textbf{cada paso es gratis}.
+
+\begin{preguntas}
+\pregunta{f}{En el caso «perder la raíz cuesta 0», ¿cuántas veces converge el agente? ¿Qué aprendió a hacer? Explica \textbf{por qué es racional} desde el punto de vista de los puntos. (Pista: compara lo que gana un episodio que pierde la raíz en el primer paso con uno que biseca 12 veces.)}
+\pregunta{g}{En el caso «cada paso es gratis», el agente sigue eligiendo $\lambda = 1/2$. ¿Por qué?}
+\pregunta{h}{Propón otra recompensa que \textbf{parezca} razonable y que el agente pueda explotar sin resolver el problema. Descríbela y di qué haría el agente.}
+\end{preguntas}
+
+Si te sobra tiempo:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py sin_medio
+\end{orden}
+\begin{preguntas}
+\pregunta{i}{Sin la opción $0{,}5$, ¿qué $\lambda$ elige? Dibuja la curva $Q(\lambda)$.}
+\end{preguntas}
+
+\section{La demostración como grafo \hfill\small\normalfont 70–85 min}
+
+Abre \codigo{bisectrl\textbackslash proof\_kb.py} con el Bloc de notas. El teorema de convergencia de la bisección está escrito como \textbf{14 pasos con dependencias} (\codigo{deps}) más \textbf{7 distractores}.
+
+\begin{preguntas}
+\pregunta{j}{Dibuja en papel el grafo: un nodo por paso, una flecha desde cada dependencia hacia el paso que la usa. Marca las hipótesis (sin flechas de entrada) y \qed.}
+\pregunta{k}{El distractor \codigo{D\_BOLZ} dice: «por Bolzano existe una raíz, luego el método converge a ella». ¿Qué le falta?}
+\pregunta{l}{Compara tu grafo con la demostración del agente en \codigo{runs\textbackslash <fecha>\textbackslash demostracion.md}. ¿El agente «entendió» la demostración? ¿Qué es lo que realmente aprendió?}
+\end{preguntas}
+
+Ahora el experimento central del laboratorio:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab01\experimentos.py grafo
+\end{orden}
+Quitamos una sola dependencia: el paso \codigo{ROOT} («$f(c)^2\le 0$, luego $f(c)=0$») deja de exigir el invariante \codigo{INV}. El verificador acepta una demostración de 13 pasos que \textbf{nunca prueba} que el cambio de signo se conserva.
+
+\begin{preguntas}
+\pregunta{m}{¿Dónde está el hueco? Escribe con tus palabras por qué $f(c)^2\le 0$ \textbf{no se sigue} sin \codigo{INV}.}
+\pregunta{n}{Conclusión: el agente encuentra un orden válido \emph{para el grafo que le dieron}. ¿Quién es responsable de que la demostración sea correcta?}
+\end{preguntas}
+
+\section{Cierre \hfill\small\normalfont 85–90 min}
+
+Entrega (una por pareja, en Word o en texto, antes de la próxima sesión):
+\begin{enumerate}
+\item La tabla de hitos con dos semillas.
+\item Respuestas a (a)–(n). Una respuesta correcta suele caber en dos líneas.
+\item Un párrafo: \emph{si tuvieras que escribir el grafo de otro teorema del curso, ¿cuál elegirías y cuáles serían sus hipótesis y su \qed?} Esto es la semilla del proyecto final.
+\end{enumerate}
+
+\begin{nota}[Tarea opcional]
+Añade en \codigo{proof\_kb.py} un distractor propio: un paso que \textbf{tú} habrías escrito en un examen y que está mal. Basta una línea como \codigo{Step("D\_MIO", "Distractor", "texto", distractor=True)} dentro de la lista \codigo{STEPS}. Corre con \codigo{--no-tui} y busca en el informe cuántas veces lo intentó el agente.
+\end{nota}
+
+\subsection*{Hacia dónde va esto}
+
+En las próximas sesiones el agente aprenderá punto fijo, Taylor, Newton, interpolación, integración, sistemas lineales y ecuaciones diferenciales con la misma receta. Luego cambiará el juego: \textbf{tú} escribirás el grafo de un teorema que no está en el repositorio y diseñarás las recompensas de un método. Y al final veremos qué pasa cuando el verificador no es un grafo escrito a mano sino un programa que certifica cada propuesta: ahí el agente sí puede encontrar cosas que nadie le dijo.
+\end{document}
