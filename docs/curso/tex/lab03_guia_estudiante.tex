@@ -1,0 +1,216 @@
+\input{preambulo}
+\newcommand{\docpie}{Laboratorio 3 · guía del estudiante}
+\begin{document}
+\cabecera{Laboratorio 3 · Aprender a interpolar}{Un agente que descubre dónde poner los nodos, y tu primer teorema para la biblioteca del curso}{Métodos numéricos · Matemáticas · 90 minutos · en parejas}
+
+El jueves vimos Taylor y Lagrange: aproximar es decidir dónde se pone la información. Taylor la pone toda en un punto; Lagrange la reparte en nodos. Hoy vas a sacar los basales a mano, graficarlos, usarlos con el PIB de tres países, ver a un agente descubrir \textbf{dónde} poner los nodos sin que nadie le hable de Chebyshev, y escribir tu primer teorema como grafo para la biblioteca de demostraciones del curso.
+
+Todas las órdenes se escriben dentro de \codigo{07\_interpolacion} y están escritas para Windows.
+\begin{nota}[Si usas Mac o Linux]
+\begin{center}
+\begin{tabular}{ll}
+\textbf{Windows} & \textbf{Mac / Linux} \\
+\codigo{.venv\textbackslash Scripts\textbackslash python} & \codigo{.venv/bin/python} \\
+\codigo{..\textbackslash docs\textbackslash curso\textbackslash lab03\textbackslash experimentos.py} & \codigo{../docs/curso/lab03/experimentos.py} \\
+\end{tabular}
+\end{center}
+\end{nota}
+
+\subsection*{Qué vas a hacer}
+\begin{enumerate}
+\item Construir a mano los polinomios basales y descubrir qué mide la suma de sus valores absolutos.
+\item Ajustar un programa corto para graficarlos y usarlos con datos reales: el PIB de Vietnam, Colombia y China.
+\item Ver a un agente aprender que los nodos de Chebyshev ganan, y romperlo para entender por qué.
+\item Escribir el grafo de un teorema y ponerlo a prueba con el mismo verificador del agente.
+\end{enumerate}
+
+\section{Instalación \hfill\small\normalfont 0–10 min}
+\begin{orden}
+cd 07_interpolacion
+python -m venv .venv
+.venv\Scripts\python -m pip install -e ".[dev]" matplotlib
+.venv\Scripts\python -m interprl --no-tui --seed 1
+\end{orden}
+El ZIP tiene que ser de hoy: si lo descargaste antes, no trae \codigo{docs\textbackslash curso\textbackslash lab03}. Cada proyecto tiene su propio \codigo{.venv}. La última orden tarda unos 20 segundos (interpola en una malla fina) y termina imprimiendo un informe. No está colgada: mientras corre, empieza la parte 2.
+
+\section{Los basales a mano \hfill\small\normalfont 10–25 min, en papel, sin IA}
+Para nodos distintos $t_0,\dots,t_n$, el basal $L_k$ vale 1 en $t_k$ y 0 en los demás nodos:
+\[
+L_k(t) = \prod_{j\neq k}\frac{t-t_j}{t_k-t_j}, \qquad P(t)=\sum_{k=0}^{n} f_k\,L_k(t).
+\]
+\begin{preguntas}
+\pregunta{a}{Con los nodos $-1, 0, 1$, escribe $L_0$, $L_1$ y $L_2$ como producto y después expandidos. Verifica en los tres nodos que valen 1 en el suyo y 0 en los otros.}
+\pregunta{b}{Lo mismo con los nodos $0, 1, 3$. Fíjate en el signo del denominador de $L_1$.}
+\pregunta{c}{Llena la tabla. \textbf{Antes de la última fila}, escribe al margen si esperas valores entre 0 y 1.}
+\end{preguntas}
+
+\renewcommand{\arraystretch}{1.9}
+\begin{tabularx}{\linewidth}{|c|c|X|X|X|X|X|}
+\hline
+\textbf{nodos} & $\boldsymbol{t}$ & $\boldsymbol{L_0}$ & $\boldsymbol{L_1}$ & $\boldsymbol{L_2}$ & \textbf{suma} & \textbf{suma de $|L_k|$} \\
+\hline
+$-1, 0, 1$ & $-1/2$ & & & & & \\ \hline
+$-1, 0, 1$ & $1/2$ & & & & & \\ \hline
+$0, 1, 3$ & $2$ & & & & & \\ \hline
+$-1, 0, 1$ & $2$ & & & & & \\ \hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.25}
+
+\begin{preguntas}
+\pregunta{d}{La columna «suma» te dio siempre lo mismo. Demuestra que, para cualesquiera $n+1$ nodos distintos, $L_0(t)+\dots+L_n(t)=1$ para todo $t$. Escríbela en pasos: cada paso es \textbf{una afirmación y la razón} que la justifica (una definición, un teorema o una cuenta). Pista: ¿qué polinomio de grado $\le n$ vale 1 en todos los nodos? ¿Qué dice la unicidad?}
+\end{preguntas}
+Revisa tu tabla con el programa (da fracciones exactas):
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py basales
+\end{orden}
+La columna «suma de $|L_k|$» tiene nombre: es la \textbf{función de Lebesgue} $\lambda(t)$, y dice cuánto puede amplificar el polinomio un error en los datos. Su máximo en el intervalo es la \textbf{constante de Lebesgue} $\Lambda$. Para $-1, 0, 1$ es exactamente uno de los números que acabas de calcular a mano.
+
+\section{Graficar y usar \hfill\small\normalfont 25–40 min}
+Abre \codigo{..\textbackslash docs\textbackslash curso\textbackslash lab03\textbackslash graficar.py} con el Bloc de notas. Solo se cambia el bloque \textbf{AJUSTA AQUÍ}. Córrelo así:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\graficar.py
+\end{orden}
+Guarda las figuras en \codigo{runs\textbackslash lab03}. Ábrelas desde el explorador de archivos.
+\begin{enumerate}
+\item Córrelo tal como está. Compara \codigo{basales.png} con lo que dibujarías tú.
+\item Agrega \codigo{2} a \codigo{PUNTOS}. La línea vertical no aparece. Averigua por qué y cambia \codigo{RANGO}.
+\item Cambia \codigo{NODOS} a \codigo{[0, 1, 3]} y \codigo{PUNTOS} a \codigo{[2]}.
+\end{enumerate}
+La segunda figura usa los mismos basales con el PIB (miles de millones de USD corrientes, Banco Mundial). Cambiamos de variable para que los nodos queden en números pequeños: $t = (\text{año}-\text{centro})/\text{escala}$.
+
+{\small
+\begin{tabularx}{\linewidth}{lXll}
+\toprule
+\textbf{ejemplo} & \textbf{nodos (año: PIB)} & \textbf{cambio de variable} & \textbf{estimar} \\
+\midrule
+Vietnam & 2012: 195.6 · 2014: 233.5 · 2016: 257.1 & $t=(\text{año}-2014)/2$ & 2013 y 2015 \\
+Colombia & 2018: 334.2 · 2019: 323.0 · 2021: 318.5 & $t=\text{año}-2018$ & 2020 \\
+China & 2017: 12\,310.5 · 2019: 14\,280.0 · 2021: 17\,820.5 & $t=(\text{año}-2019)/2$ & 2022 y 2023 \\
+\bottomrule
+\end{tabularx}}
+
+En cada ejemplo, \textbf{primero calcula $P$ a mano} con tu tabla de (c), después corre el programa. Vietnam ya está configurado; en Colombia y China llenas tú los campos que dicen \codigo{None}.
+\begin{preguntas}
+\pregunta{e}{Vietnam: tus dos estimaciones y su error. ¿Por qué funcionó tan bien?}
+\pregunta{f}{Colombia: ¿qué cree el polinomio que pasó en 2020? ¿Qué pasó? El error de interpolación depende de $f'''(\xi)$: ¿por qué esa fórmula no te salva aquí?}
+\pregunta{g}{China: compara el error de 2023 con el de 2022. Si el dato de 2021 tuviera un error del 1\,\%, ¿cuánto se movería la estimación de 2023? Usa tu última fila de (c).}
+\end{preguntas}
+
+\section{Mira cómo aprende \hfill\small\normalfont 40–55 min}
+\begin{orden}
+.venv\Scripts\python -m interprl --seed 1
+\end{orden}
+El juego: hay que aproximar una $f$ en $[-1,1]$ con error menor que $10^{-5}$ usando el menor número de nodos. El agente decide dos cosas:
+\begin{itemize}
+\item \textbf{qué familia de nodos}, una vez por partida: $\gamma=0$ son equiespaciados, $\gamma=1$ son los de Chebyshev, y en medio hay mezclas. El agente no sabe qué es Chebyshev;
+\item \textbf{añadir otro nodo o entregar}, mirando solo cuánto cambió el polinomio respecto al anterior, $|p_n-p_{n-1}|$, si ese cambio va bajando, y si lleva pocos o muchos nodos. Nunca ve $f$ ni el error real.
+\end{itemize}
+Puntos: $-1$ por cada nodo más lo que haya bajado el error; $+10$ si entrega con el error pedido; $-10$ si entrega antes de tiempo. Anota la generación de cada hito y repite con \codigo{--seed 2}.
+
+\renewcommand{\arraystretch}{2.0}
+\begin{tabularx}{\linewidth}{|X|c|c|}
+\hline
+\textbf{hito} & \textbf{gen. (seed 1)} & \textbf{gen. (seed 2)} \\
+\hline
+primera aproximación correcta & \hspace{2.6cm} & \hspace{2.6cm} \\ \hline
+descubrió el criterio de parada & & \\ \hline
+su regla coincide con la teoría & & \\ \hline
+prefiere $\gamma=1$ (Chebyshev) de forma estable & & \\ \hline
+primera demostración completa & & \\ \hline
+primera demostración mínima & & \\ \hline
+\end{tabularx}
+\renewcommand{\arraystretch}{1.25}
+
+Abre \codigo{runs\textbackslash <fecha>\textbackslash informe.md} con el Bloc de notas.
+\begin{preguntas}
+\pregunta{h}{En la tabla de $Q(\gamma)$, ¿qué significa que $Q(\gamma=1)$ sea mucho mayor que $Q(\gamma=0)$? Mira la tabla de $\Lambda$ del informe y relaciónala con tu respuesta de (g).}
+\pregunta{i}{El agente decide cuándo parar viendo $|p_n-p_{n-1}|$, no el error real. ¿Por qué es un buen estimador? ¿Puede engañarlo? Busca en el informe cuántas veces entregó antes de tiempo.}
+\end{preguntas}
+
+\section{Rómpelo \hfill\small\normalfont 55–70 min}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py familias
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py solo_equi
+\end{orden}
+\begin{preguntas}
+\pregunta{j}{\codigo{familias} no usa agente: para cada tipo de función dice cuántas veces cada familia logra el error pedido. ¿Con qué funciones fallan los equiespaciados? En \codigo{solo\_equi}, ¿cuánto cae el éxito? ¿Por qué el agente prefiere entregar mal que seguir añadiendo nodos?}
+\end{preguntas}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py sin_runge
+\end{orden}
+\begin{preguntas}
+\pregunta{k}{Ahora el agente solo ve funciones fáciles (exponenciales y senos). ¿Sigue prefiriendo Chebyshev? Lo que aprendió en la parte 4, ¿era una propiedad de los nodos o de los problemas que le mostramos?}
+\end{preguntas}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py recompensa
+\end{orden}
+\begin{preguntas}
+\pregunta{l}{En el caso «entregar mal no cuesta», ¿qué aprende? ¿Por qué es racional desde los puntos? (Pista: compara una partida que entrega en el primer paso con una que trabaja 18 nodos y gana $+10$.)}
+\end{preguntas}
+Si te sobra tiempo, inventa tu recompensa:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py recompensa --entregar-mal 0 --nodo -1 --entregar-bien 10
+\end{orden}
+
+\section{La demostración como grafo \hfill\small\normalfont 70–85 min}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py dibujar
+\end{orden}
+Es el teorema del error: 13 pasos y 8 distractores, en \codigo{interprl\textbackslash proof\_kb.py}.
+\begin{preguntas}
+\pregunta{m}{El distractor \codigo{D\_TAYLOR} dice $f(x)-p_n(x) = f^{(n+1)}(\xi)\,(x-x_0)^{n+1}/(n+1)!$. Eso es el resto de Taylor. ¿Qué tendría que pasarles a los nodos para que fuera cierto?}
+\end{preguntas}
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py grafo
+\end{orden}
+Quitamos \codigo{FIX} («$x$ no es un nodo, luego $w(x)\neq 0$») de las dependencias de \codigo{AUX}. El verificador acepta una demostración de 12 pasos.
+\begin{preguntas}
+\pregunta{n}{\codigo{AUX} define $g(t) = f(t)-p_n(t)-[f(x)-p_n(x)]\,w(t)/w(x)$. ¿Qué pasa si $x$ es un nodo? ¿Quién es responsable de que la demostración sea correcta?}
+\end{preguntas}
+
+\begin{nota}[Tu primera entrada en la biblioteca]
+Abre \codigo{..\textbackslash docs\textbackslash curso\textbackslash lab03\textbackslash mi\_grafo.py} y pasa tu demostración de (d) a pasos \codigo{Step}: en \codigo{deps} van las claves de los pasos que cada paso usa. Agrega un distractor que sea un error que tú podrías cometer. Revísalo con:
+\begin{orden}
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py mi_grafo
+\end{orden}
+\end{nota}
+\begin{preguntas}
+\pregunta{o}{¿Qué distractor escribiste y por qué es tentador? ¿Qué flecha de tu grafo lo descarta?}
+\end{preguntas}
+
+\section{Cierre \hfill\small\normalfont 85–90 min}
+Entrega (una por pareja, antes de la próxima sesión):
+\begin{enumerate}
+\item La tabla de (c), la demostración de (d) y la tabla de hitos.
+\item Las respuestas (e)–(o) en la hoja de entrega. Una respuesta correcta suele caber en dos líneas.
+\item Tu archivo \codigo{mi\_grafo.py}, renombrado \codigo{mi\_grafo\_<apellido1>\_<apellido2>.py}.
+\item El párrafo final, \textbf{con tus palabras y sin IA}: ¿para qué sirve interpolar y para qué no? Usa lo que viste con Colombia y con China.
+\end{enumerate}
+
+\begin{nota}[Tarea opcional]
+Corre \codigo{.venv\textbackslash Scripts\textbackslash python -m interprl lebesgue --nodes=-1,-0.5,0,0.5,1} y después mueve los dos nodos interiores. ¿Puedes bajar $\Lambda$? Eso es la fase 3 del proyecto: \codigo{-m interprl search --n 4} busca los mejores nodos y \codigo{verify} comprueba el resultado.
+\end{nota}
+
+\clearpage
+\cabecera{Hoja de entrega · Laboratorio 3}{Nombres: \rule{7cm}{0.4pt}}{Fecha: \rule{3cm}{0.4pt} \quad Semillas usadas: \rule{2cm}{0.4pt}}
+
+\begin{respuesta}[3.0cm]{(a) basales con nodos $-1, 0, 1$, expandidos}\end{respuesta}
+\begin{respuesta}[3.0cm]{(b) basales con nodos $0, 1, 3$, expandidos}\end{respuesta}
+\begin{respuesta}[6.2cm]{(d) $L_0+\dots+L_n=1$: cada paso, una afirmación y su razón}\end{respuesta}
+\begin{respuesta}[1.9cm]{(e) Vietnam: tus estimaciones de 2013 y 2015, su error, y por qué funcionó}\end{respuesta}
+\begin{respuesta}[2.4cm]{(f) Colombia 2020: qué cree el polinomio, qué pasó, por qué la fórmula del error no salva}\end{respuesta}
+
+\clearpage
+\begin{respuesta}[2.4cm]{(g) China: error de 2022 y 2023, y cuánto mueve 2023 un error del 1\,\% en el dato de 2021}\end{respuesta}
+\begin{respuesta}[2.2cm]{(h) qué significa $Q(\gamma=1)\gg Q(\gamma=0)$ y su relación con $\Lambda$}\end{respuesta}
+\begin{respuesta}[2.2cm]{(i) por qué $|p_n-p_{n-1}|$ es buen estimador, cuándo engaña, cuántas entregas prematuras}\end{respuesta}
+\begin{respuesta}[2.6cm]{(j) dónde fallan los equiespaciados; cuánto cae \codigo{solo\_equi}; por qué rendirse es racional}\end{respuesta}
+\begin{respuesta}[2.2cm]{(k) sin Runge: ¿sigue prefiriendo Chebyshev? ¿propiedad de los nodos o de los problemas?}\end{respuesta}
+\begin{respuesta}[2.4cm]{(l) entregar mal no cuesta: qué aprende y por qué es racional}\end{respuesta}
+\begin{respuesta}[2.0cm]{(m) qué tendría que pasarles a los nodos para que \codigo{D\_TAYLOR} fuera cierto}\end{respuesta}
+\begin{respuesta}[2.0cm]{(n) qué pasa si $x$ es un nodo; quién es responsable}\end{respuesta}
+
+\clearpage
+\begin{respuesta}[3.4cm]{(o) tu distractor, por qué es tentador y qué flecha lo descarta}\end{respuesta}
+\begin{respuesta}[7.5cm]{Párrafo final, sin IA: ¿para qué sirve interpolar y para qué no?}\end{respuesta}
+\end{document}

@@ -1,0 +1,61 @@
+# PIB anual en miles de millones de dólares corrientes (USD).
+# Fuente: Banco Mundial (NY.GDP.MKTP.CD), vía https://github.com/datasets/gdp (CC BY 4.0).
+# Congelado el 2026-10-06 y redondeado a un decimal. Se reconstruye con: graficar.py --reconstruir
+pais,anio,pib
+Viet Nam,2005,57.6
+Viet Nam,2006,66.4
+Viet Nam,2007,77.4
+Viet Nam,2008,99.1
+Viet Nam,2009,106.0
+Viet Nam,2010,147.2
+Viet Nam,2011,172.6
+Viet Nam,2012,195.6
+Viet Nam,2013,213.7
+Viet Nam,2014,233.5
+Viet Nam,2015,239.3
+Viet Nam,2016,257.1
+Viet Nam,2017,281.4
+Viet Nam,2018,310.1
+Viet Nam,2019,334.4
+Viet Nam,2020,346.6
+Viet Nam,2021,366.5
+Viet Nam,2022,410.3
+Viet Nam,2023,429.7
+Colombia,2005,145.6
+Colombia,2006,161.8
+Colombia,2007,206.2
+Colombia,2008,242.5
+Colombia,2009,232.5
+Colombia,2010,286.5
+Colombia,2011,335.0
+Colombia,2012,370.7
+Colombia,2013,382.1
+Colombia,2014,381.2
+Colombia,2015,293.5
+Colombia,2016,282.7
+Colombia,2017,311.9
+Colombia,2018,334.2
+Colombia,2019,323.0
+Colombia,2020,270.3
+Colombia,2021,318.5
+Colombia,2022,345.3
+Colombia,2023,363.5
+China,2005,2286.0
+China,2006,2752.1
+China,2007,3550.3
+China,2008,4594.3
+China,2009,5101.7
+China,2010,6087.2
+China,2011,7551.5
+China,2012,8532.2
+China,2013,9570.5
+China,2014,10475.6
+China,2015,11061.6
+China,2016,11233.3
+China,2017,12310.5
+China,2018,13894.9
+China,2019,14280.0
+China,2020,14687.7
+China,2021,17820.5
+China,2022,17881.8
+China,2023,17794.8

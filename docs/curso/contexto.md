@@ -67,9 +67,9 @@ necesitan **proyectos nuevos en el repo** (07–10) con la misma anatomía que 0
 |---|---|---|---|---|---|
 | 1 | terminal + bisección | 01 | λ = 1/2 e invariante de Bolzano | convergencia de la bisección | listo |
 | 2 | punto fijo | 02 | ley de control de α (Banach); experimentos: α fijo, estado ciego, potencial tramposo, grafo con hueco | punto fijo de Banach | listo (22 sep 2026) |
-| 3 | Taylor | 03 | cuántos términos, cuándo parar, cuándo rendirse | Taylor con resto de Lagrange | código listo, guía pendiente |
+| 3 | interpolación | 07 | dónde poner los nodos (Chebyshev emerge frente a equiespaciados, Runge) y cuántos | error de interpolación de Lagrange; fase 3: constante de Lebesgue como verificador, búsqueda de nodos mejores que Chebyshev | listo (6 oct 2026): basales a mano, `graficar.py` con el PIB de tres países, primer grafo de los estudiantes (`mi_grafo.py`) |
 | 4 | Newton y secante | 04 + 05 | salvaguardas (Armijo, Dekker); órdenes 2 y φ | convergencia cuadrática / orden φ | código listo, guía pendiente (una sesión con los dos) |
-| 5 | interpolación | 07 (nuevo) | dónde poner los nodos (Chebyshev emerge frente a equiespaciados, Runge) y cuántos | error de interpolación de Lagrange; fase 3: constante de Lebesgue como verificador, búsqueda de nodos mejores que Chebyshev | en construcción (22 sep 2026) |
+| 5 | Taylor | 03 | cuántos términos, cuándo parar, cuándo rendirse | Taylor con resto de Lagrange | código listo, guía pendiente (se movió del lab 3 al 5 el 6 oct 2026: la clase del 1 oct ya cubrió Taylor y Lagrange en teoría) |
 | 6 | integración | 08 (nuevo) | cuándo subdividir: Simpson adaptativo emerge | error del trapecio / Simpson | por construir |
 | 7 | sistemas lineales | 09 (nuevo) | ajustar ω en SOR / elegir Jacobi vs Gauss–Seidel | convergencia con diagonal dominante | por construir |
 | 8 | ecuaciones diferenciales | 10 (nuevo) | control del paso h: RK adaptativo emerge | convergencia de Euler (Lipschitz, error global O(h)) | por construir |
@@ -95,3 +95,9 @@ experimentos. Reutilizar la estructura de `docs/curso/lab01/`.
   (bisección, 90 min). Decidido: 10 labs de 90 min, PCs del laboratorio, parejas.
   Pendiente: peso del proyecto final; construir 07–10 y la plantilla del lab 9;
   comprobar en un PC del laboratorio que Python y `pip` funcionan.
+* 6 oct 2026: laboratorio 3 (interpolación, proyecto 07) en `docs/curso/lab03/`: guía, notas del
+  docente con cifras medidas, `experimentos.py` (basales, familias, hitos, solo_equi, sin_runge,
+  recompensa, dibujar, grafo, mi_grafo), `graficar.py` (el script que editan los estudiantes) y
+  `pib_tres_paises.csv` congelado. Se adelantó del lab 5 al 3; Taylor pasa al 5. Arranca la
+  biblioteca de demostraciones escritas por los estudiantes (`docs/curso/biblioteca/`), con el
+  mismo formato `Step` de los `proof_kb.py`.
