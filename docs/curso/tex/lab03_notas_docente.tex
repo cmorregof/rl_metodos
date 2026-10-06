@@ -1,14 +1,14 @@
 \input{preambulo}
 \newcommand{\docpie}{Laboratorio 3 · notas del docente}
 \begin{document}
-\cabecera{Laboratorio 3 · notas del docente}{Interpolación con un agente de RL · 90 minutos}{Resultados medidos el 6 de octubre de 2026 (Linux, Python 3.12, semilla 1 salvo que se diga otra cosa). Todo se reproduce con \codigo{docs/curso/lab03/experimentos.py} y \codigo{graficar.py}. Usa el proyecto 07; en el arco estaba como lab 5 y se adelantó porque la clase del 1 de octubre cubrió Taylor y Lagrange. El laboratorio de Taylor (proyecto 03) sigue pendiente.}
+\cabecera{Laboratorio 3 · notas del docente}{Interpolación con un agente de RL · 90 minutos}{Resultados medidos el 6 de octubre de 2026 en un MacBook Air (Apple M5, 24 GB) con macOS 26.5.2 y Python 3.13.13, semilla 1 salvo que se diga otra cosa. Las cifras son idénticas a las de la primera medición (Linux, Python 3.12); los tiempos son los de este Mac. Todo se reproduce con \codigo{docs/curso/lab03/experimentos.py} y \codigo{graficar.py}. Usa el proyecto 07; en el arco estaba como lab 5 y se adelantó porque la clase del 1 de octubre cubrió Taylor y Lagrange. El laboratorio de Taylor (proyecto 03) sigue pendiente.}
 
 \section{Plan de la sesión}
 \begin{tabularx}{\linewidth}{@{}l X l@{}}
 \toprule
 \textbf{min} & \textbf{bloque} & \textbf{modo} \\
 \midrule
-0–10 & descargar el ZIP de hoy, instalar 07 con \codigo{matplotlib}, \codigo{--no-tui} (20 s) & guiado \\
+0–10 & descargar el ZIP de hoy, instalar 07 con \codigo{matplotlib}, \codigo{--no-tui} (8 s) & guiado \\
 10–25 & basales a mano (a)–(d), sin IA; revisar con \codigo{basales} & parejas, papel \\
 25–40 & \codigo{graficar.py}: ajustar \codigo{PUNTOS}, \codigo{RANGO}, \codigo{NODOS}; PIB (e)–(g) & parejas \\
 40–55 & agente con animación, dos semillas, informe (h)–(i) & parejas \\
@@ -21,20 +21,23 @@
 Las ideas de la sesión son tres: la suma de valores absolutos de los basales es lo que amplifica los errores (de (c) a (g) y a (h)); lo que el agente aprende depende de los problemas que ve ((k)); y el verificador solo sabe lo que dicen las flechas ((n) y (o)). Si se va el tiempo, cortar (i), (k) y la tarea opcional, en ese orden. No cortar (c), (g) ni \codigo{mi\_grafo}.
 
 \section{Tiempos medidos}
-\begin{tabularx}{\linewidth}{@{}X l@{}}
+\begin{tabularx}{\linewidth}{@{}l X@{}}
 \toprule
 \textbf{orden} & \textbf{tiempo} \\
 \midrule
-\codigo{python -m interprl --no-tui --seed 1} & 17 s (fase 1: 17 s; fase 2: 0,4 s) \\
-\codigo{python -m interprl --seed 1} (animación) & $\sim$2 min \\
-\codigo{basales}, \codigo{dibujar}, \codigo{grafo}, \codigo{mi\_grafo}, \codigo{graficar.py} & $<$ 2 s \\
-\codigo{familias} & 2 s \\
-\codigo{solo\_equi}, \codigo{sin\_runge} & 15–16 s (dos entrenamientos de 2000 gen.) \\
-\codigo{recompensa} & 23 s (tres entrenamientos) \\
+\codigo{python -m interprl --no-tui --seed 1} & 8 s (fase 1: 7,5–8,2 s; fase 2: 0,1–0,2 s) \\
+\codigo{python -m interprl --seed 1} (animación) & 2,5 min (2 min 28 s y 2 min 39 s) \\
+\codigo{basales}, \codigo{dibujar}, \codigo{grafo}, \codigo{mi\_grafo} & $<$ 0,1 s \\
+\codigo{familias} & 0,8 s \\
+\codigo{hitos --seed N} & 8 s (fases 1 y 2 completas) \\
+\codigo{solo\_equi}, \codigo{sin\_runge} & 6,6 s (dos entrenamientos de 2000 gen.) \\
+\codigo{recompensa} & 10 s (tres entrenamientos) \\
+\codigo{graficar.py} & 0,4 s; la primera vez, 6 s (caché de fuentes de \codigo{matplotlib}) \\
+\codigo{search --n 4} & 1 s \\
 \bottomrule
 \end{tabularx}
 
-En los PCs del laboratorio puede ser el doble. Avisar que \codigo{--no-tui} no está colgado.
+Son dos tandas seguidas que coinciden entre sí. La primera tanda, justo después de instalar, fue más lenta: \codigo{familias} 12 s y los entrenamientos de \codigo{experimentos.py} alrededor de 1,5 veces más. De los 2,5 min de la animación, el cálculo son unos 8 s; el resto son las pausas fijas de la animación y el dibujo. En la primera medición (Linux, Python 3.12) los tiempos eran algo más del doble que estos (17 s para \codigo{--no-tui}). En los PCs del laboratorio no se ha medido: contar con que sea más lento que aquí. Avisar que \codigo{--no-tui} no está colgado.
 
 \section{Respuestas y cifras}
 \begin{preguntas}

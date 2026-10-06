@@ -1,16 +1,17 @@
 # Laboratorio 3 · notas del docente
 
-Resultados medidos el 6 de octubre de 2026 (Linux, Python 3.12, semilla 1 salvo que se diga otra
-cosa). Todo se reproduce con `docs/curso/lab03/experimentos.py` y `graficar.py`. Este laboratorio
-usa el proyecto 07 (interpolación); en el arco del curso estaba como lab 5 y se adelantó porque la
-clase del 1 de octubre ya cubrió Taylor y Lagrange. El laboratorio de Taylor (proyecto 03) sigue
-pendiente.
+Resultados medidos el 6 de octubre de 2026 en un MacBook Air (Apple M5, 24 GB) con macOS 26.5.2 y
+Python 3.13.13, semilla 1 salvo que se diga otra cosa. Las cifras son idénticas a las de la primera
+medición (Linux, Python 3.12); los tiempos son los de este Mac. Todo se reproduce con
+`docs/curso/lab03/experimentos.py` y `graficar.py`. Este laboratorio usa el proyecto 07
+(interpolación); en el arco del curso estaba como lab 5 y se adelantó porque la clase del 1 de
+octubre ya cubrió Taylor y Lagrange. El laboratorio de Taylor (proyecto 03) sigue pendiente.
 
 ## Plan de la sesión (90 min)
 
 | min | bloque | modo |
 |---|---|---|
-| 0–10 | descargar el ZIP de hoy, instalar 07 con matplotlib, `--no-tui` (20 s) | guiado |
+| 0–10 | descargar el ZIP de hoy, instalar 07 con matplotlib, `--no-tui` (8 s) | guiado |
 | 10–25 | basales a mano (a)–(d), sin IA; revisar con `basales` | parejas, papel |
 | 25–40 | `graficar.py`: ajustar `PUNTOS`, `RANGO`, `NODOS`; PIB (e)–(g) | parejas |
 | 40–55 | agente con animación, dos semillas, informe (h)–(i) | parejas |
@@ -27,15 +28,22 @@ y el verificador solo sabe lo que dicen las flechas ((n) y (o)). Si se va el tie
 
 | orden | tiempo |
 |---|---|
-| `python -m interprl --no-tui --seed 1` | 17 s (fase 1: 17 s, fase 2: 0.4 s) |
-| `python -m interprl --seed 1` (animación) | ~2 min |
-| `basales`, `dibujar`, `grafo`, `mi_grafo` | < 1 s |
-| `familias` | 2 s |
-| `solo_equi`, `sin_runge` | 15–16 s (dos entrenamientos de 2000 generaciones) |
-| `recompensa` | 23 s (tres entrenamientos) |
-| `graficar.py` | 2 s |
+| `python -m interprl --no-tui --seed 1` | 8 s (fase 1: 7.5–8.2 s, fase 2: 0.1–0.2 s) |
+| `python -m interprl --seed 1` (animación) | 2.5 min (2 min 28 s y 2 min 39 s) |
+| `basales`, `dibujar`, `grafo`, `mi_grafo` | < 0.1 s |
+| `familias` | 0.8 s |
+| `hitos --seed N` | 8 s (fases 1 y 2 completas) |
+| `solo_equi`, `sin_runge` | 6.6 s (dos entrenamientos de 2000 generaciones) |
+| `recompensa` | 10 s (tres entrenamientos) |
+| `graficar.py` | 0.4 s; la primera vez, 6 s (matplotlib arma su caché de fuentes) |
+| `search --n 4` | 1 s |
 
-En los PCs del laboratorio puede ser el doble. Avisar que `--no-tui` no está colgado.
+Son dos tandas seguidas que coinciden entre sí. La primera tanda, justo después de instalar, fue más
+lenta: `familias` 12 s y los entrenamientos de `experimentos.py` alrededor de 1.5 veces más. De los
+2.5 min de la animación, el cálculo son unos 8 s; el resto son las pausas fijas de la animación y el
+dibujo. En la primera medición (Linux, Python 3.12) los tiempos eran algo más del doble que estos
+(17 s para `--no-tui`). En los PCs del laboratorio no se ha medido: contar con que sea más lento que
+aquí. Avisar que `--no-tui` no está colgado.
 
 ## Respuestas y cifras
 
@@ -141,7 +149,7 @@ problemas es parte de la especificación, igual que la recompensa.
 | caso | éxito últimas 100 | correctas / prematuras / agotadas | familia |
 |---|---|---|---|
 | original (−10, −1, +10) | 85 % | 1333 / 653 / 14 | γ = 1 |
-| entregar mal cuesta 0 | 0 % | 1 / 1999 / 0 | ninguna (todas Q ≈ 0) |
+| entregar mal cuesta 0 | 0 % | 1 / 1999 / 0 | ninguna (imprime γ = 0 por empate: todas las Q valen −0.0) |
 | cada nodo es gratis | 87 % | 1353 / 632 / 15 | γ = 1 |
 
 Con «entregar mal cuesta 0» entrega siempre en el primer paso. Una partida que trabaja hace unos

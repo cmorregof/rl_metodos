@@ -188,7 +188,14 @@ Entrega (una por pareja, antes de la próxima sesión):
 \end{enumerate}
 
 \begin{nota}[Tarea opcional]
-Corre \codigo{.venv\textbackslash Scripts\textbackslash python -m interprl lebesgue --nodes=-1,-0.5,0,0.5,1} y después mueve los dos nodos interiores. ¿Puedes bajar $\Lambda$? Eso es la fase 3 del proyecto: \codigo{-m interprl search --n 4} busca los mejores nodos y \codigo{verify} comprueba el resultado.
+Corre esta orden y después mueve los dos nodos interiores. ¿Puedes bajar $\Lambda$?
+\begin{orden}
+.venv\Scripts\python -m interprl lebesgue --nodes=-1,-0.5,0,0.5,1
+\end{orden}
+Eso es la fase 3 del proyecto: la orden de abajo busca los mejores nodos. Para comprobar el resultado, la búsqueda imprime una orden con \codigo{verify}; cámbiale \codigo{python} por \codigo{.venv\textbackslash Scripts\textbackslash python}.
+\begin{orden}
+.venv\Scripts\python -m interprl search --n 4
+\end{orden}
 \end{nota}
 
 \clearpage

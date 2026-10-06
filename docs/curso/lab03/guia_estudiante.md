@@ -161,7 +161,11 @@ Abre `runs\<fecha>\informe.md` con el Bloc de notas.
 - (l) En el caso «entregar mal no cuesta», ¿qué aprende? ¿Por qué es racional desde los puntos?
   (Pista: compara una partida que entrega en el primer paso con una que trabaja 18 nodos y gana +10.)
 
-Si te sobra tiempo, inventa tu recompensa: `recompensa --entregar-mal 0 --nodo -1 --entregar-bien 10`.
+Si te sobra tiempo, inventa tu recompensa:
+
+```
+.venv\Scripts\python ..\docs\curso\lab03\experimentos.py recompensa --entregar-mal 0 --nodo -1 --entregar-bien 10
+```
 
 ## 6 · La demostración como grafo (70–85 min)
 
@@ -206,4 +210,5 @@ Entrega (una por pareja, antes de la próxima sesión):
 
 **Tarea opcional.** Corre `.venv\Scripts\python -m interprl lebesgue --nodes=-1,-0.5,0,0.5,1`
 y después prueba a mover los dos nodos interiores. ¿Puedes bajar Λ? Eso es la fase 3 del proyecto:
-`python -m interprl search --n 4` busca los mejores nodos y `verify` comprueba el resultado.
+`.venv\Scripts\python -m interprl search --n 4` busca los mejores nodos. Para comprobar el resultado,
+la búsqueda imprime una orden con `verify`; cámbiale `python` por `.venv\Scripts\python`.
