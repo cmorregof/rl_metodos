@@ -1,3 +1,5 @@
+The MSc thesis code now lives at https://github.com/cmorregof/prometeo.
+
 # rl_metodos
 
 **Una serie de agentes de Reinforcement Learning que aprenden, en vivo en la terminal, métodos numéricos cada vez más sofisticados: primero el método, luego la demostración de su convergencia.**
